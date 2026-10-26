@@ -3,10 +3,11 @@
 
 let currentView = "home", viewState = { friendsTab: "amigos", rankScope: "global", rankPeriod: "week", rankCrit: "xp", rewardsTab: "avatares", adminTab: "usuarios", teams: null, adminReports: null };
 const NAV = [
-  ["learn", "Aprender", "home"], ["talk", "Conversar", "chat"], ["home", "Resumo", "chart"], ["friends", "Amigos", "users"],
-  ["ranking", "Ranking", "trophy"], ["missions", "Missões", "target"], ["rewards", "Recompensas", "gift"], ["profile", "Meu Perfil", "user"],
+  ["learn", "Aprender", "home"], ["modules", "Conversação", "chat"], ["talk", "Professor IA", "sparkle"], ["vocab", "Vocabulário", "book"],
+  ["friends", "Amigos", "users"], ["rooms", "Salas ao vivo", "chat"], ["missions", "Desafios", "target"], ["ranking", "Ranking", "trophy"], ["progress", "Meu progresso", "chart"],
+  ["rewards", "Loja e medalhas", "gift"], ["profile", "Perfil", "user"],
 ];
-const BOTTOM = [["learn", "Aprender", "home"], ["talk", "Conversar", "chat"], ["ranking", "Ranking", "trophy"], ["missions", "Missões", "target"], ["more", "Mais", "more"]];
+const BOTTOM = [["learn", "Aprender", "home"], ["modules", "Conversação", "chat"], ["talk", "Professor IA", "sparkle"], ["ranking", "Ranking", "trophy"], ["more", "Mais", "more"]];
 
 function renderShell() {
   $("#app").innerHTML = `<div class="shell">
@@ -18,20 +19,21 @@ function renderNav() {
   const hidden = !S.onboarded || currentView === "run";
   $(".side").style.display = hidden ? "none" : ""; $(".shell").classList.toggle("nonav", hidden); $("#bottom-nav").style.display = hidden ? "none" : "";
   const items = Store.isOwner ? [...NAV, ["admin", "Administração", "shield"]] : NAV;
-  $("#side-nav").innerHTML = items.map(([v, l, i]) => `<button class="navbtn" data-a="go" data-v="${v}" ${currentView === v || (v === "profile" && ["progress", "plans"].includes(currentView)) ? 'aria-current="page"' : ""}>${icon(i)}<span>${l}</span></button>`).join("");
+  $("#side-nav").innerHTML = items.map(([v, l, i]) => `<button class="navbtn" data-a="go" data-v="${v}" ${currentView === v || (v === "profile" && ["plans"].includes(currentView)) ? 'aria-current="page"' : ""}>${icon(i)}<span>${l}</span></button>`).join("");
   $("#side-foot").innerHTML = S.onboarded ? `<div class="row" style="padding:10px;gap:8px"><span class="chip xp">${icon("bolt")} <span class="num">${S.xp}</span></span><span class="chip">${FLAME_SVG("icon", D().xp > 0)} <span class="num">${streakAlive()}</span></span><span class="chip">${HEART_SVG()} <span class="num">${heartsLabel()}</span></span></div>` : "";
-  const moreViews = ["home", "friends", "rewards", "profile", "progress", "plans", "admin"];
+  const moreViews = ["home", "vocab", "rooms", "friends", "missions", "rewards", "profile", "progress", "plans", "admin"];
   $("#bottom-nav").innerHTML = BOTTOM.map(([v, l, i]) => `<button data-a="${v === "more" ? "more" : "go"}" data-v="${v}" ${(currentView === v || (v === "more" && moreViews.includes(currentView))) ? 'aria-current="page"' : ""}>${icon(i)}<span>${l}</span></button>`).join("");
 }
 function go(v) {
   if (v !== "run" && Runner.active && currentView === "run" && !Runner.finished) { Runner.active = false; clearInterval(tickHandle); setPresence("No início"); }
   if (currentView === "run" && v !== "run") { cleanupDuel(); Music.stop(); }
+  if (currentView === "rooms" && v !== "rooms" && RoomS.id) leaveRoom(true);
   currentView = v; closeModal(); renderNav(); rerender(); scrollTo(0, 0);
 }
 function rerender() {
   const el = $("#view"); if (!el) return;
   ensureDuo();
-  const R = { onboarding: vOnboarding, home: vHome, learn: vPath, practice: vLearn, run: renderRunner, talk: vTalk, friends: vFriends, ranking: vRanking, missions: vMissions, rewards: vRewards, profile: vProfile, progress: vProgress, plans: vPlans, admin: vAdmin };
+  const R = { onboarding: vOnboarding, home: vHome, learn: vPath, practice: vLearn, modules: vModules, vocab: vVocab, rooms: vRooms, run: renderRunner, talk: vTalk, friends: vFriends, ranking: vRanking, missions: vMissions, rewards: vRewards, profile: vProfile, progress: vProgress, plans: vPlans, admin: vAdmin };
   ensureMissions();
   el.innerHTML = (R[currentView] || vHome)();
   renderNav();
@@ -177,6 +179,7 @@ function vTalk() {
     const last = S.convo.sessions.slice(-1)[0];
     return `${head("Conversar", `Pratique com a professora Lia, uma IA que se adapta ao seu nível (${studying()}).`)}
       ${!Store.sample ? `<div class="notice">A professora de IA precisa de uma conta. Vá em Meu Perfil e toque em Entrar.</div>` : ""}
+      <button class="mode" data-a="go" data-v="modules"><span class="ic">${icon("chat")}</span><span><b>Situações reais dos 25 módulos</b><br><span class="small muted">Escolha uma situação (aeroporto, médico, entrevista…) e pratique com a professora</span></span></button>
       <section class="grid3">${LUE_SCENARIOS.map((s) => `<button class="mode" data-a="scenario" data-v="${s.id}" ${Store.sample ? "" : "disabled"}><span class="ic">${icon(s.id === "free" ? "chat" : s.id === "interview" ? "user" : s.id === "airport" ? "target" : "speaker")}</span><span><b>${esc(s.title)}</b><br><span class="small muted">${esc(s.desc)}</span></span></button>`).join("")}</section>
       <section class="card stack"><h3>Como funciona</h3><ol class="stack" style="margin:0;padding-left:20px;gap:6px">
         <li>Você escreve${SR_OK ? " ou fala" : ""} em inglês. Pode misturar português quando travar.</li><li>A professora responde no seu nível, com tradução e áudio.</li><li>Quando há um erro importante, ela mostra uma forma mais natural e explica em português.</li><li>Toque em “Praticar esta frase” para repetir a versão corrigida.</li><li>No fim, você recebe notas de gramática, vocabulário e fluência (sotaque não tira ponto).</li></ol>
@@ -186,7 +189,7 @@ function vTalk() {
   const sc = Chat.scenario;
   return `<div class="row between"><div><p class="eyebrow">Conversando · nível ${studying()}</p><h2>${esc(sc.title)}</h2></div><button class="btn" data-a="end-chat">Encerrar e ver notas</button></div>
     <div class="chat" aria-live="polite">${Chat.view.map((m, k) => m.who === "me" ? `<div class="msg me">${esc(m.text)}${m.spoken ? ' <span class="small">(voz)</span>' : ""}</div>` :
-      `<div class="msg"><span>${esc(m.en)}</span>${m.pt ? `<details><summary class="small muted" style="cursor:pointer">Tradução</summary><span class="pt">${esc(m.pt)}</span></details>` : ""}<div class="row" style="gap:4px"><button class="btn ghost small" data-a="play" data-text="${esc(m.en)}" aria-label="Ouvir">${icon("speaker")}</button><button class="btn ghost small" data-a="play" data-slow="1" data-text="${esc(m.en)}" aria-label="Ouvir devagar">${icon("slow")}</button></div></div>
+      `<div class="msg"><span>${esc(m.en)}</span>${m.pron ? `<span class="pron">${esc(m.pron)}</span>` : ""}${m.pt ? `<details><summary class="small muted" style="cursor:pointer">Tradução</summary><span class="pt">${esc(m.pt)}</span></details>` : ""}<div class="row" style="gap:4px"><button class="btn ghost small" data-a="play" data-text="${esc(m.en)}" aria-label="Ouvir">${icon("speaker")}</button><button class="btn ghost small" data-a="play" data-slow="1" data-text="${esc(m.en)}" aria-label="Ouvir devagar">${icon("slow")}</button></div></div>
       ${m.tip ? `<div class="correction"><b>Dica</b><span>${esc(m.tip)}</span></div>` : ""}
       ${m.corr ? `<div class="correction"><b>Forma mais natural</b><span class="small">Você disse: <s>${esc(m.corr.you_said || "")}</s></span><span>${esc(m.corr.better)} <button class="btn ghost small" data-a="play" data-text="${esc(m.corr.better)}" aria-label="Ouvir">${icon("speaker")}</button></span><span class="small">${esc(m.corr.why_pt || "")}</span><button class="btn small" data-a="practice-phrase" data-v="${esc(m.corr.better)}" style="align-self:flex-start">${icon("repeat")} Praticar esta frase</button></div>` : ""}`).join("")}
       ${Chat.busy ? `<div class="msg"><span class="typing" aria-label="Escrevendo"><i></i><i></i><i></i></span></div>` : ""}
@@ -420,7 +423,7 @@ function showMedal(a, more = 0) {
 /* ---------- ações ---------- */
 const A = {
   go: (el) => go(el.dataset.v),
-  more: () => modal(`<div class="row between"><h2>Mais</h2><button class="btn ghost small" data-a="close" aria-label="Fechar">${icon("x")}</button></div><div class="stack sheet">${[["home", "Resumo", "chart"], ["friends", "Amigos", "users"], ["rewards", "Loja e medalhas", "gift"], ["profile", "Meu Perfil", "user"], ["progress", "Painel de progresso", "chart"], ...(Store.isOwner ? [["admin", "Administração", "shield"]] : [])].map(([v, l, i]) => `<button class="navbtn" data-a="go" data-v="${v}">${icon(i)}<span>${l}</span></button>`).join("")}</div>`),
+  more: () => modal(`<div class="row between"><h2>Mais</h2><button class="btn ghost small" data-a="close" aria-label="Fechar">${icon("x")}</button></div><div class="stack sheet">${[["vocab", "Vocabulário", "book"], ["rooms", "Salas ao vivo", "chat"], ["missions", "Desafios", "target"], ["home", "Resumo do dia", "home"], ["friends", "Amigos", "users"], ["rewards", "Loja e medalhas", "gift"], ["profile", "Meu Perfil", "user"], ["progress", "Painel de progresso", "chart"], ...(Store.isOwner ? [["admin", "Administração", "shield"]] : [])].map(([v, l, i]) => `<button class="navbtn" data-a="go" data-v="${v}">${icon(i)}<span>${l}</span></button>`).join("")}</div>`),
   close: () => { closeModal(); if (Runner.pendingLevel) { const h = Runner.pendingLevel; Runner.pendingLevel = null; modal(h); } },
   "modal-bg": (el, e) => { if (e.target === el) A.close(); },
   "ob-pick": (el) => { const k = el.dataset.k; S.profile[k] = k === "minutes" ? +el.dataset.v : el.dataset.v; $$(`[data-a="ob-pick"][data-k="${k}"]`).forEach((b) => b.setAttribute("aria-pressed", b === el)); if (k === "level0") $("#ob-test").checked = el.dataset.v !== "zero"; },
@@ -437,7 +440,22 @@ const A = {
   placement: () => startPlacement(),
   "ai-lesson-open": () => modal(`<h2>Aula sob medida</h2><p class="muted">Diga o tema e a IA cria uma aula no seu nível (${studying()}) com vocabulário, frases e exercícios.</p><form class="stack" id="ai-lesson-form"><input type="text" id="ai-topic" maxlength="120" placeholder="ex.: pedir desconto numa loja, reunião com cliente, futebol"><div class="row"><button class="btn primary" type="submit">${icon("sparkle")} Criar aula</button><button class="btn" type="button" data-a="close">Cancelar</button></div></form>`),
   "ai-lesson-del": (el) => { S.aiLessons = S.aiLessons.filter((l) => l.id !== el.dataset.v); save(); rerender(); },
-  play: (el) => speak(el.dataset.text, !!el.dataset.slow),
+  play: (el) => speak(el.dataset.text, !!el.dataset.slow, +(el.dataset.voice || 0)),
+  "play-dlg": (el) => { const u = unitById(el.dataset.v); if (u && u.dialogue) playDialogue(u.dialogue); },
+  "play-dlg-run": () => { const ex = curEx(); if (ex && ex.lines) playDialogue(ex.lines); },
+  lvtest: (el) => startLevelTestN(+el.dataset.v),
+  "mod-open": (el) => { viewState.module = el.dataset.v; rerender(); scrollTo(0, 0); },
+  "mod-close": () => { viewState.module = null; rerender(); scrollTo(0, 0); },
+  "sit-start": (el) => startNode(el.dataset.u, el.dataset.k),
+  "mod-more": (el) => { const m = MODULE_BY_ID[el.dataset.v]; if (m) { viewState.pendingModule = m.id; aiMakeLesson(`${m.title}: uma situação nova e realista`); } },
+  vtab: (el) => { viewState.vocabTab = el.dataset.v; rerender(); },
+  "room-join": (el) => joinRoom(el.dataset.v),
+  "room-leave": () => leaveRoom(),
+  "room-del": (el) => deleteRoomMsg(el.dataset.v),
+  "room-check": () => checkRoomMsg(),
+  "room-use": () => { if (!RoomS.check) return; const better = RoomS.check.better; RoomS.check = null; rerender(); const i = $("#room-in"); if (i) { i.value = better; i.focus(); } },
+  "gen-level": (el) => { Gen.err = ""; genLevel(+el.dataset.v); },
+  roleplay: (el) => startRoleplay(el.dataset.v),
   opt: (el) => { if (Runner.answered) return; Runner.sel = el.dataset.v; const ex = curEx(); if (ex.t === "fill") rerunner(); else { $$(".opt").forEach((b) => b.setAttribute("aria-pressed", b === el)); const c = $('[data-a="check"]'); if (c) c.disabled = false; } },
   check: () => checkAnswer(),
   next: () => nextItem(),
@@ -540,12 +558,13 @@ document.addEventListener("change", (e) => {
   if (el.dataset && el.dataset.a === "pref-toggle") A["pref-toggle"](el);
   if (el.id === "rank-crit") { viewState.rankCrit = el.value; rerender(); }
 });
-document.addEventListener("input", (e) => { if (e.target.id === "ans") Runner.sel = e.target.value; if (e.target.matches && e.target.matches("input[type=text], textarea")) click(e.inputType && e.inputType.startsWith("delete") ? "back" : "key"); });
+document.addEventListener("input", (e) => { if (e.target.id === "vocab-q") { const pos = e.target.selectionStart; viewState.vocabQ = e.target.value; rerender(); const i = $("#vocab-q"); if (i) { i.focus(); i.setSelectionRange(pos, pos); } } if (e.target.id === "ans") Runner.sel = e.target.value; if (e.target.matches && e.target.matches("input[type=text], textarea")) click(e.inputType && e.inputType.startsWith("delete") ? "back" : "key"); });
 const parseLines = (txt) => txt.split("\n").map((l) => l.split("=").map((x) => x.trim())).filter((p) => p.length >= 2 && p[0] && p[1]).map((p) => [p[0], p.slice(1).join("=")]);
 document.addEventListener("submit", (e) => {
   const f = e.target; e.preventDefault();
   if (f.id === "ob-form") submitOnboarding();
   if (f.id === "chat-form") { const v = $("#chat-in").value; sendChat(v); }
+  if (f.id === "room-form") { RoomS.check = null; sendRoomMsg($("#room-in").value); }
   if (f.id === "add-friend") { sendFriendRequest($("#friend-name").value); $("#friend-name").value = ""; }
   if (f.id === "duel-code") playDuel($("#duel-code-in").value);
   if (f.id === "group-join") joinGroup($("#group-code").value);
@@ -563,6 +582,7 @@ document.addEventListener("submit", (e) => {
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && e.target.id === "chat-in" && !e.shiftKey) { e.preventDefault(); sendChat(e.target.value); return; }
+  if (e.key === "Enter" && e.target.id === "room-in" && !e.shiftKey) { e.preventDefault(); RoomS.check = null; sendRoomMsg(e.target.value); return; }
   if (currentView !== "run" || !Runner.active || $("#modal-root").innerHTML) return;
   const ex = curEx(); if (!ex) { if (e.key === "Enter" && Runner.finished) leaveRun(); return; }
   if (e.key === "Enter") { e.preventDefault(); if (Runner.finished) return; if (ex.t === "intro" || Runner.answered) nextItem(); else if (ex.t !== "speak" && ex.t !== "match") checkAnswer(); return; }

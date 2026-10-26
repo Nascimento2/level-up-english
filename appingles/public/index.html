@@ -463,6 +463,38 @@ label.field{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size
 .ob-mascots{justify-content:center;align-items:flex-end;gap:0}
 .end-mascots{align-items:flex-end;position:relative;z-index:1}
 .end-screen{padding-top:40px}
+
+/* ===== diálogos, pronúncia, módulos e vocabulário ===== */
+.pron{display:block;font-size:.82rem;color:var(--brand);font-style:italic;letter-spacing:.01em;margin-top:2px}
+.pron.big{font-size:1rem}
+.feedback .pron{color:inherit;opacity:.85}
+.dlg{display:flex;flex-direction:column;gap:10px}
+.dlg-line{display:flex;flex-direction:column;gap:2px;max-width:88%;min-width:0}
+.dlg-line.left{align-self:flex-start}
+.dlg-line.right{align-self:flex-end;align-items:flex-end}
+.dlg-who{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0 6px}
+.dlg-bubble{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:8px 12px 8px 6px;min-width:0}
+.dlg-line.right .dlg-bubble{background:var(--brand-soft);border-color:transparent}
+.dlg-bubble b{display:block;font-size:1rem}
+.dlg-bubble .small{display:block}
+.dlg-blank{font-family:var(--display);font-size:1.4rem;font-weight:800;color:var(--brand);padding:8px 22px;border-style:dashed}
+.dlg-play{min-height:30px;padding:4px 6px;flex:none}
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.mod-card{display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px;border-radius:16px;border:2px solid var(--line);border-bottom-width:4px;background:var(--surface);cursor:pointer;min-width:0}
+.mod-card:hover{border-color:color-mix(in srgb,var(--brand) 40%,var(--line))}
+.mod-card.locked{opacity:.6}
+.mod-txt{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.mod-txt b{font-size:1rem;line-height:1.25}
+.sit-card.locked{opacity:.65}
+.strength{display:inline-flex;gap:2px;flex:none}
+.strength i{width:6px;height:16px;border-radius:3px;background:var(--surface-2)}
+.strength i.on{background:var(--ok)}
+.chips-wrap{display:flex;flex-wrap:wrap;gap:6px}
+.chips-wrap .chip{cursor:pointer;border:0}
+.gen-card{padding:24px}
+.room-msg{display:flex;gap:8px;align-items:flex-end;min-width:0}
+.room-msg.me{justify-content:flex-end}
+.room-msg .msg{max-width:80%}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -478,7 +510,14 @@ label.field{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size
 <script src="ai.js"></script>
 <script src="social.js"></script>
 <script src="mascots.js"></script>
+<script src="modules-a.js"></script>
+<script src="modules-b.js"></script>
+<script src="modules-c.js"></script>
 <script src="duo.js"></script>
+<script src="levels.js"></script>
+<script src="gen.js"></script>
+<script src="library.js"></script>
+<script src="rooms.js"></script>
 <script src="views.js"></script>
 <script>
 /* app instalável: registra o service worker e oferece "Instalar" */

@@ -2,9 +2,10 @@
 "use strict";
 
 /* ---------- conteúdo ---------- */
+function genUnitsAll() { return Object.values((S && S.gen) || {}).flatMap((g) => (g && g.units) || []); }
 function allUnits() {
   const custom = (CUSTOM.lessons || []).map((l) => ({ ...l, id: "cx_" + l.id, custom: true, fills: l.fills || [] }));
-  return [...LUE_UNITS, ...custom, ...S.aiLessons.map((l) => ({ ...l, ai: true }))];
+  return [...LUE_UNITS, ...(typeof MODULE_UNITS !== "undefined" ? MODULE_UNITS : []), ...genUnitsAll(), ...custom, ...S.aiLessons.map((l) => ({ ...l, ai: true }))];
 }
 function unitById(id) { return allUnits().find((u) => u.id === id); }
 function bandUnits(b) { return LUE_UNITS.filter((u) => u.cefr === b); }
@@ -24,8 +25,8 @@ function nextLesson() {
   const u = pool.sort((a, b) => ((S.lessons[a.id + "_f"] || {}).best || 0) - ((S.lessons[b.id + "_f"] || {}).best || 0))[0] || LUE_UNITS[0];
   return { unit: u, kind: "f" };
 }
-function wordPool(units) { return units.flatMap((u) => u.words.map((w) => ({ en: w[0], pt: w[1], unit: u.id }))); }
-function sentPool(units) { return units.flatMap((u) => u.sentences.map((s) => ({ en: s[0], pt: s[1], unit: u.id }))); }
+function wordPool(units) { return units.flatMap((u) => u.words.map((w) => ({ en: w[0], pt: w[1], pron: w[2] || "", unit: u.id }))); }
+function sentPool(units) { return units.flatMap((u) => u.sentences.map((s) => ({ en: s[0], pt: s[1], pron: s[2] || "", unit: u.id }))); }
 const ALL_WORDS = () => wordPool(allUnits());
 const ALL_SENTS = () => sentPool(allUnits());
 const LEN_COUNT = { 5: 8, 10: 12, 15: 16, 30: 26 };
@@ -39,32 +40,57 @@ function distractors(item, pool, key, n, rng) {
 function exMC(item, dir, pool, rng) {
   const [qk, ak] = dir === "en2pt" ? ["en", "pt"] : ["pt", "en"];
   const opts = shuffle([item[ak], ...distractors(item, pool, ak, 3, rng).map((d) => d[ak])], rng);
-  return { t: "mc", prompt: dir === "en2pt" ? "O que significa?" : "Como se diz em inglês?", q: item[qk], audio: dir === "en2pt" ? item.en : null, a: item[ak], opts, en: item.en, pt: item.pt, unit: item.unit, skill: "vocab", word: item.isWord };
+  return { t: "mc", prompt: dir === "en2pt" ? "O que significa?" : "Como se diz em inglês?", q: item[qk], audio: dir === "en2pt" ? item.en : null, a: item[ak], opts, en: item.en, pt: item.pt, pron: item.pron, unit: item.unit, skill: "vocab", word: item.isWord };
 }
 function exListen(item, pool, rng) {
   const opts = shuffle([item.en, ...distractors(item, pool, "en", 3, rng).map((d) => d.en)], rng);
-  return { t: "listen", prompt: "Ouça e escolha o que foi dito", audio: item.en, a: item.en, opts, en: item.en, pt: item.pt, unit: item.unit, skill: "listen", word: item.isWord };
+  return { t: "listen", prompt: "Ouça e escolha o que foi dito", audio: item.en, a: item.en, opts, en: item.en, pt: item.pt, pron: item.pron, unit: item.unit, skill: "listen", word: item.isWord };
 }
 function tokens(s) { return s.replace(/[.?!,]/g, "").split(/\s+/).filter(Boolean); }
 function exBuild(item, pool, rng) {
   const tk = tokens(item.en);
   const extra = shuffle(pool.flatMap((p) => tokens(p.en)).filter((w) => !tk.map((x) => x.toLowerCase()).includes(w.toLowerCase())), rng).slice(0, 2);
-  return { t: "build", prompt: "Monte a frase em inglês", q: item.pt, a: item.en, tiles: shuffle([...tk, ...extra], rng), en: item.en, pt: item.pt, unit: item.unit, skill: "writing" };
+  return { t: "build", prompt: "Monte a frase em inglês", q: item.pt, a: item.en, tiles: shuffle([...tk, ...extra], rng), en: item.en, pt: item.pt, pron: item.pron, unit: item.unit, skill: "writing" };
 }
-function exType(item) { return { t: "type", prompt: "Escreva em inglês", q: item.pt, a: item.en, en: item.en, pt: item.pt, unit: item.unit, skill: "writing", word: item.isWord }; }
-function exDict(item) { return { t: "dict", prompt: "Ouça e escreva o que você ouviu", audio: item.en, a: item.en, en: item.en, pt: item.pt, unit: item.unit, skill: "listen" }; }
-function exSpeak(item) { return SR_OK ? { t: "speak", prompt: "Fale esta frase em inglês", a: item.en, en: item.en, pt: item.pt, unit: item.unit, skill: "speaking" } : exDict(item); }
+function exType(item) { return { t: "type", prompt: "Escreva em inglês", q: item.pt, a: item.en, en: item.en, pt: item.pt, pron: item.pron, unit: item.unit, skill: "writing", word: item.isWord }; }
+function exDict(item) { return { t: "dict", prompt: "Ouça e escreva o que você ouviu", audio: item.en, a: item.en, en: item.en, pt: item.pt, pron: item.pron, unit: item.unit, skill: "listen" }; }
+function exSpeak(item) { return SR_OK ? { t: "speak", prompt: "Fale esta frase em inglês", a: item.en, en: item.en, pt: item.pt, pron: item.pron, unit: item.unit, skill: "speaking" } : exDict(item); }
+/* diálogos */
+function exDialogue(u) { return { t: "dlg", lines: u.dialogue, title: u.title, unit: u.id, uid: u.id, skill: "dialogue" }; }
+function exDialogueFill(u, rng = Math.random) {
+  const L = u.dialogue; if (!L || L.length < 3) return null;
+  const k = 1 + Math.floor(rng() * (L.length - 1)); const line = L[k];
+  const others = shuffle(allUnits().filter((x) => x.dialogue && x.id !== u.id).flatMap((x) => x.dialogue.map((d) => d[1])), rng)
+    .filter((t) => t !== line[1] && Math.abs(tokens(t).length - tokens(line[1]).length) <= 4).slice(0, 2);
+  if (others.length < 2) return null;
+  return { t: "dlgfill", prompt: "Complete o diálogo", ctx: L.slice(Math.max(0, k - 3), k), spk: line[0], a: line[1], opts: shuffle([line[1], ...others], rng), en: line[1], pt: line[2], pron: line[3], unit: u.id, skill: "dialogue" };
+}
+function speakerSide(lines) { const order = []; for (const l of lines) if (!order.includes(l[0])) order.push(l[0]); return (name) => (order.indexOf(name) % 2 ? "right" : "left"); }
+function dialogueHTML(lines, withPt = true, hideLast = null) {
+  const side = speakerSide(lines);
+  return `<div class="dlg">${lines.map((l, i) => `<div class="dlg-line ${side(l[0])}"><span class="dlg-who">${esc(l[0])}</span><div class="dlg-bubble">
+    <div class="row" style="gap:6px;flex-wrap:nowrap;align-items:flex-start"><button class="btn ghost small dlg-play" data-a="play" data-text="${esc(l[1])}" data-voice="${side(l[0]) === "right" ? 1 : 0}" aria-label="Ouvir">${icon("speaker")}</button>
+    <div style="min-width:0"><b>${esc(l[1])}</b>${l[3] ? `<span class="pron">${esc(l[3])}</span>` : ""}${withPt ? `<span class="small muted">${esc(l[2])}</span>` : ""}</div></div></div></div>`).join("")}
+    ${hideLast ? `<div class="dlg-line ${side(hideLast)}"><span class="dlg-who">${esc(hideLast)}</span><div class="dlg-bubble dlg-blank">?</div></div>` : ""}</div>`;
+}
+function playDialogue(lines) {
+  try {
+    speechSynthesis.cancel(); const side = speakerSide(lines);
+    for (const l of lines) { const u = new SpeechSynthesisUtterance(l[1]); u.lang = "en-US"; const v = side(l[0]) === "right" ? 1 : 0; const vs = englishVoices(); if (vs.length) u.voice = vs[v % vs.length]; u.pitch = v ? 0.85 : 1.1; u.rate = 0.95 * (S.profile.rate || 1); speechSynthesis.speak(u); }
+  } catch { toast("O áudio não está disponível neste navegador."); }
+}
+function englishVoices() { try { const vs = speechSynthesis.getVoices().filter((v) => /^en[-_]/i.test(v.lang)); const us = vs.filter((v) => /US/i.test(v.lang)); return us.length >= 2 ? us : vs; } catch { return []; } }
 function exMatch(items, rng) { return { t: "match", prompt: "Ligue os pares", pairs: items.slice(0, 4).map((w) => [w.en, w.pt]), left: shuffle(items.slice(0, 4).map((w) => w.en), rng), right: shuffle(items.slice(0, 4).map((w) => w.pt), rng), skill: "vocab", unit: items[0] && items[0].unit, words: items.slice(0, 4) }; }
 function exFill(f, unit, rng) { return { t: "fill", prompt: "Complete a frase", q: f[0], a: f[1], opts: shuffle(f[2], rng), expl: f[3], unit, skill: "grammar" }; }
 function exIntro(w, unit) {
   const ex = (unit.sentences || []).find((s) => norm(s[0]).split(" ").includes(norm(w.en).split(" ")[0]));
-  return { t: "intro", en: w.en, pt: w.pt, unit: unit.id, example: ex, skill: "vocab" };
+  return { t: "intro", en: w.en, pt: w.pt, pron: w.pron, unit: unit.id, example: ex, skill: "vocab" };
 }
 
 function buildLesson(unit, kind, count) {
   const rng = mulberry32(hashStr(unit.id + kind + Date.now()));
-  const words = unit.words.map((w) => ({ en: w[0], pt: w[1], unit: unit.id, isWord: true }));
-  const sents = unit.sentences.map((s) => ({ en: s[0], pt: s[1], unit: unit.id }));
+  const words = unit.words.map((w) => ({ en: w[0], pt: w[1], pron: w[2] || "", unit: unit.id, isWord: true }));
+  const sents = unit.sentences.map((s) => ({ en: s[0], pt: s[1], pron: s[2] || "", unit: unit.id }));
   const wpool = [...words, ...wordPool(allUnits()).map((w) => ({ ...w, isWord: true }))];
   const spool = [...sents, ...ALL_SENTS()];
   const items = [];
@@ -78,6 +104,7 @@ function buildLesson(unit, kind, count) {
     for (const w of shuffle(words, rng).slice(0, 2)) items.push(exType(w));
     for (const w of shuffle(words, rng).slice(0, 2)) items.push(exListen(w, wpool, rng));
   } else {
+    if (unit.dialogue && unit.dialogue.length) { items.push(exDialogue(unit)); for (let k = 0; k < 2; k++) { const d = exDialogueFill(unit, rng); if (d) items.push(d); } }
     for (const s of sents) items.push(pick([() => exBuild(s, spool, rng), () => exListen(s, spool, rng), () => exBuild(s, spool, rng)], rng)());
     for (const f of unit.fills || []) items.push(exFill(f, unit.id, rng));
     for (const s of shuffle(sents, rng).slice(0, 2)) items.push(exSpeak(s));
@@ -87,9 +114,10 @@ function buildLesson(unit, kind, count) {
   }
   let out = items;
   if (out.length > count) {
-    const intros = out.filter((x) => x.t === "intro" || x.t === "match");
-    const rest = shuffle(out.filter((x) => x.t !== "intro" && x.t !== "match"), rng).slice(0, Math.max(4, count - intros.length));
-    out = kind === "v" ? out.filter((x) => intros.includes(x) || rest.includes(x)) : shuffle(rest, rng).sort((a, b) => (a.t === "speak") - (b.t === "speak"));
+    const keep = (x) => x.t === "intro" || x.t === "match" || x.t === "dlg" || x.t === "dlgfill";
+    const intros = out.filter(keep);
+    const rest = shuffle(out.filter((x) => !keep(x)), rng).slice(0, Math.max(4, count - intros.length));
+    out = kind === "v" ? out.filter((x) => intros.includes(x) || rest.includes(x)) : [...intros, ...shuffle(rest, rng).sort((a, b) => (a.t === "speak") - (b.t === "speak"))];
   }
   while (out.length < count) {
     const extra = reviewItems(1, rng)[0] || (kind === "v" ? exMC(pick(words, rng), "pt2en", wpool, rng) : exListen(pick(sents, rng), spool, rng));
@@ -125,7 +153,7 @@ const Runner = { active: false, pendingMedals: [] };
 function startRun(cfg) {
   Object.assign(Runner, {
     active: true, mode: cfg.mode || "lesson", title: cfg.title || "Lição", lessonId: cfg.lessonId || null, unit: cfg.unit || null,
-    items: cfg.items, i: 0, results: [], requeued: new Set(), xp: 0, started: Date.now(), itemStart: Date.now(), secs: 0,
+    items: cfg.items, i: 0, results: [], level: cfg.level || null, requeued: new Set(), xp: 0, started: Date.now(), itemStart: Date.now(), secs: 0,
     answered: false, sel: null, built: [], matchSel: null, matchDone: [], matchMiss: 0, speakRes: null,
     hooks: cfg.hooks || {}, pendingMedals: [], timerEnd: cfg.timerSec ? Date.now() + cfg.timerSec * 1000 : null, qTimer: cfg.qTimer || 0, band: cfg.band || null,
     showAnswers: cfg.showAnswers !== false, aiExplain: null, finished: false, qEnd: null, pendingLevel: null, acc: 0, passed: false,
@@ -165,10 +193,13 @@ function optsHTML(ex) {
 function renderEx(ex) {
   switch (ex.t) {
     case "intro": return `<div class="row" style="gap:10px;align-items:flex-end">${mascot(MASCOT_ORDER[Runner.i % 3], "wave", 70)}${speech("Palavra nova! Toque para ouvir.")}</div>
-      <div class="row">${audioBtns(ex.en)}<div class="stack" style="gap:4px"><span class="q-big">${esc(ex.en)}</span><span class="muted" style="font-size:1.1rem">${esc(ex.pt)}</span></div></div>
+      <div class="row">${audioBtns(ex.en)}<div class="stack" style="gap:4px"><span class="q-big">${esc(ex.en)}</span>${ex.pron ? `<span class="pron big">${esc(ex.pron)}</span>` : ""}<span class="muted" style="font-size:1.1rem">${esc(ex.pt)}</span></div></div>
       ${ex.example ? `<div class="card flat"><p class="eyebrow">Exemplo</p><p style="font-weight:600">${esc(ex.example[0])} <button class="btn ghost small" data-a="play" data-text="${esc(ex.example[0])}" aria-label="Ouvir exemplo">${icon("speaker")}</button></p><p class="muted">${esc(ex.example[1])}</p></div>` : ""}`;
     case "mc": return `<p class="q-title">${esc(ex.prompt)}</p><div class="row">${ex.audio ? `<button class="audiobtn slow" data-a="play" data-text="${esc(ex.audio)}" aria-label="Ouvir">${icon("speaker")}</button>` : ""}<span class="q-big">${esc(ex.q)}</span></div>${optsHTML(ex)}`;
     case "listen": return `<p class="q-title">${esc(ex.prompt)}</p>${audioBtns(ex.audio)}${optsHTML(ex)}`;
+    case "dlg": return `<div class="row" style="gap:10px;align-items:flex-end">${mascot(MASCOT_ORDER[(Runner.i + 1) % 3], "wave", 64)}${speech("Leia e ouça o diálogo. A pronúncia aparece em azul.")}</div>
+      <p class="q-title">${esc(ex.title)}</p>${dialogueHTML(ex.lines, true)}<button class="btn" data-a="play-dlg-run">${icon("speaker")} Ouvir o diálogo inteiro</button>`;
+    case "dlgfill": return `<p class="q-title">${esc(ex.prompt)}</p>${dialogueHTML(ex.ctx, false, ex.spk)}<p class="small muted">O que ${esc(ex.spk)} diz agora?</p>${optsHTML(ex)}`;
     case "fill": return `<p class="q-title">${esc(ex.prompt)}</p><p class="q-big" style="font-size:1.5rem">${esc(ex.q).replace("___", '<span style="border-bottom:3px solid var(--brand);padding:0 18px">' + (Runner.sel ? esc(Runner.sel) : "&nbsp;") + "</span>")}</p>${optsHTML(ex)}`;
     case "build": {
       const used = new Set(Runner.built);
@@ -195,7 +226,7 @@ function renderEx(ex) {
   return "";
 }
 function renderFooter(ex) {
-  if (ex.t === "intro") return `<div class="feedback"><button class="btn primary big" data-a="next">Continuar</button></div>`;
+  if (ex.t === "intro" || ex.t === "dlg") return `<div class="feedback"><button class="btn primary big" data-a="next">Continuar</button></div>`;
   if (ex.t === "match") return Runner.answered ? `<div class="feedback right"><b>Pares completos!</b><button class="btn ok big" data-a="next">Continuar</button></div>` : "";
   if (!Runner.answered) {
     const can = ex.t === "build" ? Runner.built.length > 0 : ex.t === "speak" ? false : ex.t === "type" || ex.t === "dict" ? true : !!Runner.sel;
@@ -204,12 +235,12 @@ function renderFooter(ex) {
   const last = Runner.results[Runner.results.length - 1] || {};
   if (!Runner.showAnswers) return `<div class="feedback"><span class="ink">Resposta registrada.</span><button class="btn primary big" data-a="next">Continuar</button></div>`;
   if (last.ok) {
-    const extra = last.typo ? `<span class="ink small">Quase perfeito! Atenção à grafia: <b>${esc(ex.a)}</b></span>` : ex.t === "speak" && Runner.speakRes ? `<span class="ink small">Pronúncia compreensível: ${Math.round(Runner.speakRes.score * 100)}% das palavras reconhecidas.</span>` : ex.pt && ex.t !== "mc" ? `<span class="ink small">${esc(ex.pt)}</span>` : "";
+    const extra = (last.typo ? `<span class="ink small">Quase perfeito! Atenção à grafia: <b>${esc(ex.a)}</b></span>` : ex.t === "speak" && Runner.speakRes ? `<span class="ink small">Pronúncia compreensível: ${Math.round(Runner.speakRes.score * 100)}% das palavras reconhecidas.</span>` : ex.pt && ex.t !== "mc" ? `<span class="ink small">${esc(ex.pt)}</span>` : "") + (ex.pron ? `<span class="pron">${esc(ex.pron)}</span>` : "");
     return `<div class="feedback right" role="status">${mascot(pick(MASCOT_ORDER), "happy", 74, "fb-mascot")}<div class="fb-head"><span class="fb-ic">${icon("check")}</span><b class="fb-title">${pick(["Muito bem!", "Isso aí!", "Mandou bem!", "Perfeito!", "Excelente!"])}</b></div>${extra}<button class="btn ok big" data-a="next">Continuar</button></div>`;
   }
   const missed = ex.t === "speak" && Runner.speakRes && Runner.speakRes.missed ? `<span class="ink small">Palavras para treinar: ${Runner.speakRes.missed.map((w) => `<b>${esc(w)}</b>`).join(", ")}</span>` : "";
   return `<div class="feedback wrong" role="status">${mascot(pick(MASCOT_ORDER), "sad", 74, "fb-mascot")}<div class="fb-head"><span class="fb-ic">${icon("x")}</span><b class="fb-title">Resposta correta:</b></div><b class="ink fb-answer">${esc(ex.a)}</b>
-    ${ex.expl ? `<span class="ink small">${esc(ex.expl)}</span>` : ex.pt && ex.t !== "mc" ? `<span class="ink small">${esc(ex.pt)}</span>` : ""}${missed}
+    ${ex.expl ? `<span class="ink small">${esc(ex.expl)}</span>` : ex.pt && ex.t !== "mc" ? `<span class="ink small">${esc(ex.pt)}</span>` : ""}${ex.pron ? `<span class="pron">${esc(ex.pron)}</span>` : ""}${missed}
     ${Runner.aiExplain ? `<span class="ink small" id="ai-expl">${esc(Runner.aiExplain)}</span>` : ""}
     <div class="row">${Store.sample && !Runner.aiExplain && Runner.mode !== "duel" ? `<button class="btn small" data-a="ai-explain">${icon("sparkle")} Explicar com IA</button>` : ""}
     ${ex.t === "speak" ? `<button class="btn small" data-a="speak-retry">${icon("repeat")} Tentar de novo</button>` : ""}
@@ -255,12 +286,13 @@ function popXP(g) { if (g <= 0) return; const p = document.createElement("div");
 function nextItem() {
   const ex = curEx();
   if (ex && ex.t === "intro") { wordSeen(ex.en, ex.pt, ex.unit); Runner.secs += Math.min(30, (Date.now() - Runner.itemStart) / 1000); }
+  if (ex && ex.t === "dlg") Runner.secs += Math.min(90, (Date.now() - Runner.itemStart) / 1000);
   if (Runner.mode === "lesson" && !unlimitedHearts() && heartsNow() <= 0 && Runner.i + 1 < Runner.items.length) { Runner.noHearts = true; Runner.answered = false; rerunner(); return; }
   Runner.i++; Object.assign(Runner, { answered: false, sel: null, built: [], matchSel: null, matchDone: [], matchMiss: 0, speakRes: null, aiExplain: null, qEnd: null, itemStart: Date.now() });
   if (Runner.i >= Runner.items.length) return endRun();
   rerunner(); autoPlay();
 }
-function autoPlay() { const ex = curEx(); if (ex && (ex.t === "listen" || ex.t === "dict")) setTimeout(() => speak(ex.audio), 250); if (ex && ex.t === "intro") setTimeout(() => speak(ex.en), 250); }
+function autoPlay() { const ex = curEx(); if (ex && (ex.t === "listen" || ex.t === "dict")) setTimeout(() => speak(ex.audio), 250); if (ex && ex.t === "intro") setTimeout(() => speak(ex.en), 250); if (ex && ex.t === "dlg") setTimeout(() => playDialogue(ex.lines), 350); }
 function rerunner() { if (currentView !== "run") return; const y = scrollY; $("#view").innerHTML = renderRunner(); scrollTo(0, y); const inp = $("#ans"); if (inp && !Runner.answered) inp.focus(); startQTimer(); }
 
 /* cronômetros */
@@ -281,7 +313,7 @@ function startQTimer() {
 /* fim da sessão */
 function endRun() {
   clearInterval(tickHandle); Music.stop();
-  const graded = Runner.results.filter((r) => r.ex.t !== "match");
+  const graded = Runner.results.filter((r) => r.ex.t !== "match" && r.ex.t !== "dlg");
   const correct = graded.filter((r) => r.ok).length; const total = graded.length || 1;
   const acc = correct / total; Runner.acc = acc; Runner.finished = true;
   const d = D(); d.sec = (d.sec || 0) + Runner.secs; d.min = Math.floor(d.sec / 60);
@@ -307,8 +339,9 @@ function renderRunEnd() {
   if (["lesson", "review", "errors", "blitz"].includes(Runner.mode)) return lessonEndHTML();
   const acc = Math.round((Runner.acc || 0) * 100); const mins = Math.max(1, Math.round(Runner.secs / 60));
   const wrong = Runner.results.filter((r) => !r.ok && r.ex.t !== "match");
-  const title = Runner.mode === "placement" ? "Teste de nivelamento concluído" : Runner.mode === "test" ? (Runner.passed ? `Aprovado no teste ${Runner.band}!` : `Teste ${Runner.band}: ainda não foi desta vez`) : acc >= 90 ? "Excelente aula!" : acc >= 70 ? "Boa aula!" : "Aula concluída";
-  const sub = Runner.mode === "placement" ? `Estimativa inicial: <b>${esc(S.cefr.estimate || "A1")}</b>. Liberamos as trilhas certas para você.` : Runner.mode === "test" ? (Runner.passed ? "Seu certificado já está em Recompensas." : "Você precisa de 80% para passar. Revise os erros abaixo e tente de novo quando quiser.") : "";
+  const tname = Runner.level ? `do nível ${Runner.level}` : Runner.band;
+  const title = Runner.mode === "placement" ? "Teste de nivelamento concluído" : Runner.mode === "test" ? (Runner.passed ? `Aprovado no teste ${tname}!` : `Teste ${tname}: ainda não foi desta vez`) : acc >= 90 ? "Excelente aula!" : acc >= 70 ? "Boa aula!" : "Aula concluída";
+  const sub = Runner.mode === "placement" ? `Estimativa inicial: <b>${esc(S.cefr.estimate || "A1")}</b>. Liberamos as trilhas certas para você.` : Runner.mode === "test" ? (Runner.passed ? (Runner.level ? `O nível ${Runner.level + 1} está liberado!${LEVEL_CEFR[Runner.level] ? " Seu certificado está em Recompensas." : ""}` : "Seu certificado já está em Recompensas.") : "Você precisa de 80% para passar. Revise os erros abaixo e tente de novo quando quiser.") : "";
   return `<div class="runner"><div class="card stack celebrate" style="padding:28px">
     <p class="eyebrow">${esc(Runner.title)}</p><h1>${title}</h1>${sub ? `<p class="muted">${sub}</p>` : ""}
     <div class="stats" style="width:100%;margin-top:8px">
@@ -336,7 +369,7 @@ function startLesson(unitId, kind) {
   const u = unitById(unitId); if (!u) return;
   if (!canStartLesson()) return;
   const count = LEN_COUNT[S.profile.minutes] || 12;
-  startRun({ mode: "lesson", title: `${u.title} · ${kind === "v" ? "Vocabulário" : "Frases"}`, lessonId: `${u.id}_${kind}`, unit: u, items: buildLesson(u, kind, count), presence: `Lição: ${u.title}` });
+  startRun({ mode: "lesson", title: `${u.title} · ${kind === "v" ? "Vocabulário" : u.dialogue ? "Diálogo" : "Frases"}`, lessonId: `${u.id}_${kind}`, unit: u, items: buildLesson(u, kind, count), presence: `Lição: ${u.title}` });
 }
 function startDaily(minutes) {
   if (!canStartLesson()) return;
@@ -355,13 +388,13 @@ function startReview() {
   startRun({ mode: "review", title: "Revisão inteligente", items, presence: "Revisando palavras" });
 }
 function startListening() {
-  const rng = Math.random; const units = LUE_UNITS.filter((u) => bandUnlocked(u.cefr));
+  const rng = Math.random; const units = unlockedUnits();
   const words = wordPool(units).map((w) => ({ ...w, isWord: true })); const sents = sentPool(units);
   const items = [...shuffle(words, rng).slice(0, 4).map((w) => exListen(w, words, rng)), ...shuffle(sents, rng).slice(0, 4).map((s) => exListen(s, sents, rng)), ...shuffle(sents, rng).slice(0, 3).map(exDict)];
   startRun({ mode: "review", title: "Treino de escuta", items: shuffle(items), presence: "Treinando escuta" });
 }
 function startPronunciation() {
-  const units = LUE_UNITS.filter((u) => bandUnlocked(u.cefr)); const sents = shuffle(sentPool(units)).slice(0, 6);
+  const units = unlockedUnits(); const sents = shuffle(sentPool(units)).slice(0, 6);
   if (!SR_OK) toast("O microfone não está disponível aqui: vamos treinar com ditado (ouvir e escrever).");
   startRun({ mode: "review", title: "Treino de pronúncia", items: sents.map(exSpeak), presence: "Treinando pronúncia" });
 }
@@ -384,6 +417,7 @@ function startLevelTest(band) {
   startRun({ mode: "test", band, title: `Teste de nível ${band}`, items: shuffle(items, rng), showAnswers: false, presence: `Fazendo o teste ${band}` });
 }
 function finishTest(acc) {
+  if (Runner.level) return finishLevelTest(acc);
   const band = Runner.band; const score = Math.round(acc * 100);
   S.tot.tests[band] = Math.max(S.tot.tests[band] || 0, score);
   Runner.passed = acc >= 0.8;

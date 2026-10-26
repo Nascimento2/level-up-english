@@ -120,16 +120,18 @@ window.LUE_STANDALONE = true;
       onSnapshot(cb, onErr) { return watch({ path }, get, cb, onErr); },
     };
   }
-  function collection(parent, filters = [], lim = 1000) {
+  function collection(parent, filters = [], lim = 1000, order = null) {
     const get = async () => {
       let q = sb.from("docs").select("path,data").eq("parent", parent);
       for (const [f, v] of filters) q = q.eq("data->>" + f, String(v));
+      if (order) q = q.order("data->" + order[0], { ascending: order[1] !== "desc" });
       const { data, error } = await q.limit(lim); if (error) fail(error);
       return { docs: (data || []).map((r) => ({ id: r.path.replace(/^.*\//, ""), data: () => r.data })) };
     };
     return {
-      where(f, op, v) { return collection(parent, [...filters, [f, v]], lim); },
-      limit(n) { return collection(parent, filters, n); },
+      where(f, op, v) { return collection(parent, [...filters, [f, v]], lim, order); },
+      orderBy(f, dir = "asc") { return collection(parent, filters, lim, [f, dir]); },
+      limit(n) { return collection(parent, filters, n, order); },
       get,
       onSnapshot(cb, onErr) { return watch({ parent }, get, cb, onErr); },
     };

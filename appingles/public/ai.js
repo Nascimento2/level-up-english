@@ -21,7 +21,7 @@ function aiErrorCopy(e) {
 }
 
 function startScenario(id) {
-  const sc = LUE_SCENARIOS.find((s) => s.id === id) || LUE_SCENARIOS[0];
+  const sc = typeof id === "object" && id ? id : LUE_SCENARIOS.find((s) => s.id === id) || LUE_SCENARIOS[0];
   if (Chat.scenario) endConversation(true);
   Object.assign(Chat, { scenario: sc, turns: [], view: [{ who: "ai", en: sc.opener, pt: "" }], scores: [], err: "", lastAt: Date.now(), startedAt: Date.now() });
   setPresence(`Conversando: ${sc.title}`);
@@ -30,16 +30,18 @@ function startScenario(id) {
 function rules() {
   const lvl = studying(); const sc = Chat.scenario;
   return `You are "Teacher Lia", a friendly English teacher for Brazilian learners in the app Level Up English.
-Learner's English level (CEFR): ${lvl}. Learner's main goal: ${GOALS[S.profile.goal] || "everyday conversation"}.
+Learner's English level (CEFR): ${lvl}; course level ${typeof currentLevel === "function" ? currentLevel() : 1} of an endless course. Learner's main goal: ${GOALS[S.profile.goal] || "everyday conversation"}.
 Scenario: ${sc.title} — ${sc.desc}. You play the other person in this scenario (in "Conversa livre" you are a friendly conversation partner).
 Rules:
 - Reply in natural spoken English adapted to ${lvl}: for A1/A2 use very short, simple sentences; for B1 and above speak naturally. 1 to 3 sentences, and usually end with a question that keeps the conversation going.
 - Look only at the learner's LAST message. If it has a relevant error (grammar, word choice, unnatural phrasing, or Portuguese words), give a correction. Ignore capitalization, missing punctuation and small typos that do not change meaning. Never comment on accent. If the message is good, correction is null.
+- If you give a correction, end your reply by kindly asking the learner to try saying it again the right way.
+- Every few turns, ask a new question about a different detail so each session feels different.
 - If the learner writes in Portuguese or asks how to say something, answer the question briefly in Brazilian Portuguese inside "tip_pt" and model the English sentence in "reply".
 - Explanations are in Brazilian Portuguese, simple and kind, at most 2 sentences. Never make the learner feel embarrassed.
 - Scores rate the learner's LAST message from 0 to 5 for grammar, vocabulary and fluency (naturalness), fair for the learner's level.
 Reply with only one JSON object in this exact shape:
-{"reply":"English reply","reply_pt":"tradução em português","correction":null,"tip_pt":"","scores":{"grammar":4,"vocabulary":4,"fluency":4}}
+{"reply":"English reply","reply_pt":"tradução em português","reply_pron":"pronúncia simplificada para brasileiros (sílaba forte em MAIÚSCULAS)","correction":null,"tip_pt":"","scores":{"grammar":4,"vocabulary":4,"fluency":4}}
 Example with a correction:
 {"reply":"Sure! Would you like it hot or iced?","reply_pt":"Claro! Você quer quente ou gelado?","correction":{"you_said":"I want a coffee big","better":"I'd like a large coffee, please.","why_pt":"Em inglês o adjetivo vem antes do substantivo, e \\"I'd like\\" soa mais educado que \\"I want\\"."},"tip_pt":"","scores":{"grammar":2,"vocabulary":3,"fluency":3}}`;
 }
@@ -63,7 +65,7 @@ async function sendChat(text, spoken = false) {
     const corr = out.correction && out.correction.better ? out.correction : null;
     const sc = out.scores || {}; const g = clamp(+sc.grammar || 0, 0, 5), v = clamp(+sc.vocabulary || 0, 0, 5), f = clamp(+sc.fluency || 0, 0, 5);
     Chat.scores.push({ g, v, f });
-    Chat.view.push({ who: "ai", en: reply, pt: String(out.reply_pt || ""), corr, tip: String(out.tip_pt || "") });
+    Chat.view.push({ who: "ai", en: reply, pt: String(out.reply_pt || ""), pron: String(out.reply_pron || ""), corr, tip: String(out.tip_pt || "") });
     S.convo.msgs++; d.cv++;
     const sk = d.sk.speaking || (d.sk.speaking = [0, 0]); sk[1]++; if (!corr) sk[0]++;
     const xp = gainXP(3 + Math.round((g + v + f) / 5)); popXP(xp);
@@ -128,7 +130,8 @@ Give exactly 8 words, 6 sentences (max 10 words each, adapted to ${lvl}) and 3 f
     if (!ok) throw { code: "invalid_json" };
     const fills = (out.fills || []).filter((f) => Array.isArray(f) && f.length >= 3 && Array.isArray(f[2]) && f[2].includes(f[1]) && String(f[0]).includes("___"));
     const id = "ai_" + rid(5);
-    S.aiLessons.unshift({ id, cefr: lvl, title: String(out.title || topic).slice(0, 60), goal: String(out.goal || "").slice(0, 140), topic, words: out.words.slice(0, 10).map((w) => [String(w[0]), String(w[1])]), sentences: out.sentences.slice(0, 8).map((s) => [String(s[0]), String(s[1])]), fills: fills.slice(0, 4).map((f) => [String(f[0]), String(f[1]), f[2].map(String), String(f[3] || "")]) });
+    const modRef = viewState.pendingModule || null; viewState.pendingModule = null;
+    S.aiLessons.unshift({ id, module: modRef, cefr: lvl, title: String(out.title || topic).slice(0, 60), goal: String(out.goal || "").slice(0, 140), topic, words: out.words.slice(0, 10).map((w) => [String(w[0]), String(w[1])]), sentences: out.sentences.slice(0, 8).map((s) => [String(s[0]), String(s[1])]), fills: fills.slice(0, 4).map((f) => [String(f[0]), String(f[1]), f[2].map(String), String(f[3] || "")]) });
     S.aiLessons = S.aiLessons.slice(0, 12); save(); closeModal(); rerender(); toast("Aula criada! Ela está em “Aulas sob medida”.");
   } catch (e) { modal(`<h2>Não deu certo desta vez</h2><p class="muted">${esc(aiErrorCopy(e) || "Tente outro tema.")}</p><button class="btn primary" data-a="close">Fechar</button>`); }
 }

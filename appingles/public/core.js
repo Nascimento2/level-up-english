@@ -446,11 +446,12 @@ function pickVoice() {
   } catch {}
 }
 try { speechSynthesis.onvoiceschanged = pickVoice; pickVoice(); } catch {}
-function speak(text, slow = false) {
+function speak(text, slow = false, alt = 0) {
   try {
     if (!("speechSynthesis" in window)) throw 0;
     speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text);
     u.lang = "en-US"; if (VOICE) u.voice = VOICE; u.rate = (slow ? 0.65 : 0.95) * (S.profile.rate || 1);
+    if (alt) { const vs = typeof englishVoices === "function" ? englishVoices() : []; if (vs.length > 1) u.voice = vs[1]; u.pitch = 0.85; }
     speechSynthesis.speak(u);
   } catch { toast("O áudio não está disponível neste navegador."); }
 }

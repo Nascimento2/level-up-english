@@ -49,102 +49,7 @@ function statusBar() {
 const UNIT_COLORS = ["#3152F5", "#0B9668", "#E8590C", "#7048E8", "#0C8599", "#D6336C", "#C77700", "#2B8A3E", "#5C7CFA", "#E64980", "#1971C2", "#9C36B5"];
 const UNIT_ICONS = { amizades: "users", restaurantes: "coin", "dia a dia": "home", compras: "gift", viagens: "flag", trabalho: "chart", "reuniões": "chat", conversa: "chat" };
 const ZIG = [0, 44, 70, 44, 0, -44, -70, -44];
-const BAND_NAMES = { A1: "Básico: primeiros passos", A2: "Básico: situações do dia a dia", B1: "Intermediário: trabalho e opiniões" };
 
-function unitNodes(u) {
-  return [
-    { k: "v", type: "lesson", id: u.id + "_v", label: "Vocabulário", ic: "book" },
-    { k: "f", type: "lesson", id: u.id + "_f", label: "Frases e diálogos", ic: "chat" },
-    { k: "c", type: "chest", id: u.id + "_c", label: "Baú" },
-    { k: "r", type: "lesson", id: u.id + "_r", label: "Revisão da unidade", ic: "dumbbell" },
-  ];
-}
-function nodeDone(n) { return n.type === "chest" ? !!S.chests[n.id] : lessonDone(n.id); }
-/* primeira etapa ainda não feita de cada faixa liberada */
-function pathState() {
-  const cur = {}; let first = null;
-  for (const b of ["A1", "A2", "B1"]) {
-    if (!bandUnlocked(b)) continue;
-    outer: for (const u of bandUnits(b)) for (const n of unitNodes(u)) if (!nodeDone(n)) { cur[b] = n.id; if (!first) first = n.id; break outer; }
-  }
-  return { cur, first };
-}
-function nodeHTML(u, n, idx, color, st, band) {
-  const done = nodeDone(n); const unlocked = bandUnlocked(band);
-  const order = bandUnits(band).flatMap(unitNodes).map((x) => x.id);
-  const curIdx = st.cur[band] ? order.indexOf(st.cur[band]) : order.length;
-  const avail = unlocked && (done || order.indexOf(n.id) <= curIdx);
-  const isCur = n.id === st.cur[band]; const isFirst = n.id === st.first;
-  const off = ZIG[idx % ZIG.length];
-  const L = S.lessons[n.id];
-  let inner;
-  if (n.type === "chest") inner = `<svg class="node-ic chest-ic" viewBox="0 0 48 48" aria-hidden="true">${done
-    ? '<path d="M8 20 L14 8 H34 L40 20 Z" fill="#A86B1C"/><rect x="7" y="20" width="34" height="20" rx="3" fill="#C98A2E"/><rect x="7" y="25" width="34" height="3" fill="#8A5310"/><circle cx="24" cy="16" r="4" fill="#FFD43B"/>'
-    : '<rect x="7" y="18" width="34" height="22" rx="3" fill="#C98A2E"/><path d="M7 22 V16 a8 8 0 0 1 8-8 h18 a8 8 0 0 1 8 8 v6 Z" fill="#A86B1C"/><rect x="7" y="22" width="34" height="3" fill="#8A5310"/><rect x="20" y="20" width="8" height="9" rx="2" fill="#FFD43B"/>'}</svg>`;
-  else inner = done ? icon("check", "node-ic") : !avail ? icon("lock", "node-ic") : icon(n.ic, "node-ic");
-  const cls = n.type === "chest" ? `node chest ${done ? "opened" : ""} ${avail ? "" : "locked"}` : `node ${done ? "done" : ""} ${avail ? "" : "locked"} ${isCur ? "current" : ""}`;
-  const action = n.type === "chest" ? (avail && !done ? `data-a="chest" data-v="${esc(u.id)}"` : "") : avail ? `data-a="node" data-u="${esc(u.id)}" data-k="${n.k}"` : `data-a="node-locked"`;
-  const tip = `${n.label}${done && L && L.best ? ` · melhor ${L.best}%` : ""}${!avail ? " · bloqueada" : ""}`;
-  return `<div class="node-wrap ${isFirst ? "has-bubble" : ""} ${isCur && n.type !== "chest" ? "has-ring" : ""}" style="--o:${off}">
-    ${isFirst ? `<span class="start-bubble">COMEÇAR</span>` : ""}
-    ${isCur && n.type !== "chest" ? `<svg class="node-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="none" stroke="var(--surface-2)" stroke-width="7"/></svg>` : ""}
-    <button class="${cls}" style="--c:${color}" ${action} aria-label="${esc(u.title)}: ${esc(tip)}" title="${esc(tip)}">${inner}</button>
-  </div>`;
-}
-function vPath() {
-  ensureDuo();
-  const st = pathState(); let uIdx = 0;
-  const bands = ["A1", "A2", "B1"].map((b) => {
-    const unlocked = bandUnlocked(b); const passed = S.cefr.passed[b]; const prev = CEFR[CEFR.indexOf(b) - 1];
-    const units = bandUnits(b).map((u) => {
-      const color = UNIT_COLORS[uIdx % UNIT_COLORS.length]; const num = ++uIdx;
-      const nodes = unitNodes(u).map((n, k) => nodeHTML(u, n, k + (num % 2 ? 0 : 4), color, st, b)).join("");
-      const side = num % 2 ? "right" : "left";
-      return `<section class="unit-sec">
-        <header class="unit-banner" style="--c:${color}"><div class="ub-txt"><p class="ub-eyebrow">Seção ${b} · Unidade ${num}</p><h2>${esc(u.title)}</h2><p class="ub-goal">${esc(u.goal)}</p></div>
-          <button class="ub-guide" data-a="guide" data-v="${esc(u.id)}">${icon("guide")}<span>Guia</span></button></header>
-        <div class="path" ${unlocked ? "" : 'aria-disabled="true"'}>
-          <span class="path-deco ${side}" aria-hidden="true">${mascot(mascotForUnit(num - 1), unitNodes(u).some((n) => n.id === st.first) ? "wave" : "idle", 104)}</span>
-          ${nodes}
-        </div></section>`;
-    }).join("");
-    const trophyAvail = unlocked && !passed;
-    const trophy = `<div class="node-wrap" style="--o:0"><button class="node trophy ${passed ? "done" : ""} ${unlocked ? "" : "locked"}" ${trophyAvail ? `data-a="test" data-v="${b}"` : passed ? `data-a="cert" data-v="${b}"` : 'data-a="node-locked"'} aria-label="Teste de nível ${b}">
-      <svg class="node-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v6a5 5 0 0 1-10 0z" fill="#FFD43B"/><path d="M7 5H4a3 3 0 0 0 3.5 4M17 5h3a3 3 0 0 1-3.5 4" fill="none" stroke="#FFD43B" stroke-width="2"/><path d="M10.5 14h3v3h-3zM8 18h8v3H8z" fill="#FAB005"/></svg></button>
-      <p class="trophy-cap">${passed ? `Certificado ${b} · ${passed.score}%` : `Teste de nível ${b}`}</p></div>`;
-    return `<div class="band-sec ${unlocked ? "" : "band-locked"}">
-      <div class="band-divider"><span class="cefr-badge">${b}</span><b>${BAND_NAMES[b]}</b>${!unlocked && prev ? `<button class="btn small" data-a="test" data-v="${prev}" ${bandUnlocked(prev) ? "" : "disabled"}>${icon("bolt")} Pular para cá: teste ${prev}</button>` : ""}</div>
-      ${units}<div class="path">${trophy}</div></div>`;
-  }).join("");
-  const due = dueWords().length; const goal = dailyGoalXP(); const dx = D().xp;
-  const rank = myRank("week"); const notes = homeNotes();
-  const side = `<aside class="path-side">
-    <div class="side-sticky">${statusBar()}
-    <section class="card stack"><div class="row between"><h3>Meta do dia</h3><button class="btn ghost small" data-a="go" data-v="missions">Ver missões</button></div>
-      <div class="row" style="gap:12px">${FLAME_SVG("goal-flame", dx > 0)}<div class="stack" style="gap:6px;flex:1;min-width:0"><div class="bar xp goal-bar"><i style="width:${Math.min(100, (dx / goal) * 100)}%"></i><span class="num">${dx} / ${goal} XP</span></div><p class="small muted">${dx >= goal ? "Meta batida! O resto é bônus." : `Faltam ${goal - dx} XP para bater a meta.`}</p></div></div>
-      ${S.missions.list.map(missionRow).join("")}</section>
-    <section class="card stack"><h3>Praticar</h3>
-      <div class="practice-grid">
-        <button class="pr" data-a="start-review" ${due ? "" : ""}><span class="pr-ic" style="--c:#0B9668">${icon("repeat")}</span><b>Revisão</b><span class="small muted">${due ? `${due} para hoje` : "Reforço"}</span></button>
-        <button class="pr" data-a="listening"><span class="pr-ic" style="--c:#0C8599">${icon("ear")}</span><b>Escuta</b><span class="small muted">Áudio nativo</span></button>
-        <button class="pr" data-a="pronunciation"><span class="pr-ic" style="--c:#7048E8">${icon("mic")}</span><b>Pronúncia</b><span class="small muted">${SR_OK ? "Fale e ganhe nota" : "Ditado"}</span></button>
-        <button class="pr" data-a="errors"><span class="pr-ic" style="--c:#D6336C">${icon("x")}</span><b>Erros</b><span class="small muted">${S.errors.length} no histórico</span></button>
-        <button class="pr" data-a="blitz" ${levelOf(S.xp).n >= 3 ? "" : "disabled"}><span class="pr-ic" style="--c:#E8590C">${icon(levelOf(S.xp).n >= 3 ? "bolt" : "lock")}</span><b>Relâmpago</b><span class="small muted">${levelOf(S.xp).n >= 3 ? "60 segundos" : "Nível 3"}</span></button>
-        <button class="pr" data-a="ai-lesson-open" ${Store.sample ? "" : "disabled"}><span class="pr-ic" style="--c:#C77700">${icon("sparkle")}</span><b>Aula com IA</b><span class="small muted">Tema livre</span></button>
-      </div>
-      <p class="small muted">Praticar devolve 1 vida quando você acerta 60% ou mais.</p></section>
-    <section class="card row" style="gap:12px"><span class="ic">${icon("trophy")}</span><div class="stack" style="gap:2px;flex:1;min-width:0"><b>${rank ? `Você está em ${rank}º na semana` : "Ranking semanal"}</b><span class="small muted">Ganhe XP para subir</span></div><button class="btn small" data-a="go" data-v="ranking">Ver</button></section>
-    </div></aside>`;
-  const extras = `${S.aiLessons.length ? `<section class="card stack"><h3>Aulas sob medida</h3>${S.aiLessons.map((u) => unitCard(u, true, true)).join("")}</section>` : ""}
-    ${(CUSTOM.lessons || []).length ? `<section class="card stack"><h3>Conteúdo extra</h3>${allUnits().filter((u) => u.custom).map((u) => unitCard(u, true)).join("")}</section>` : ""}
-    <section class="card stack"><div class="row" style="gap:12px"><span class="cefr-badge">B2+</span><div style="flex:1;min-width:0"><h3>Avançado com IA</h3><p class="small muted">Testes B2, C1 e C2 gerados pela IA.</p></div></div>
-      ${bandUnlocked("B2") ? `<div class="row">${["B2", "C1", "C2"].map((b) => S.cefr.passed[b] ? `<span class="chip ok">${icon("check")} ${b} ${S.cefr.passed[b].score}%</span>` : bandUnlocked(b) ? `<button class="btn small" data-a="ai-test" data-v="${b}" ${Store.sample ? "" : "disabled"}>Teste ${b}</button>` : `<span class="chip">${icon("lock")} ${b}</span>`).join("")}</div>` : `<span class="chip">${icon("lock")} Passe no teste B1</span>`}</section>`;
-  return `<div class="path-layout"><div class="path-main">
-      <div class="mobile-only">${statusBar()}</div>
-      ${notes.length ? `<section class="card"><p class="eyebrow">Para você</p><div class="list">${notes.join("")}</div></section>` : ""}
-      ${!S.flags.placementDone ? `<button class="mode" data-a="placement"><span class="ic">${icon("target")}</span><span><b>Teste de nivelamento</b><br><span class="small muted">Descubra seu nível em 4 minutos e pule o que já sabe</span></span></button>` : ""}
-      ${bands}${extras}</div>${side}</div>`;
-}
 function homeNotes() {
   const notes = [];
   for (const r of FREQ_IN.filter((x) => x.status === "pending")) { const p = displayPlayer(r.from); notes.push(`<div class="li">${avatarHTML(p, 36)}<div class="grow"><b>${esc(p.u)}</b> quer ser seu amigo</div><button class="btn small primary" data-a="req-yes" data-v="${r.id}">Aceitar</button><button class="btn small" data-a="req-no" data-v="${r.id}">Recusar</button></div>`); }
@@ -188,11 +93,14 @@ function chestOpen(unitId) {
 }
 function unitGuide(unitId) {
   const u = unitById(unitId); if (!u) return;
-  modal(`<div class="row between"><div><p class="eyebrow">${esc(u.cefr)} · Guia da unidade</p><h2>${esc(u.title)}</h2></div><button class="btn ghost small" data-a="close" aria-label="Fechar">${icon("x")}</button></div>
-    <p class="muted">${esc(u.goal)}</p>
-    <h3>Palavras</h3><div class="list">${u.words.map((w) => `<div class="li"><button class="btn ghost small" data-a="play" data-text="${esc(w[0])}" aria-label="Ouvir">${icon("speaker")}</button><div class="grow"><b>${esc(w[0])}</b> <span class="muted">${esc(w[1])}</span></div></div>`).join("")}</div>
-    <h3>Frases-chave</h3><div class="list">${u.sentences.map((s) => `<div class="li"><button class="btn ghost small" data-a="play" data-text="${esc(s[0])}" aria-label="Ouvir">${icon("speaker")}</button><div class="grow"><b>${esc(s[0])}</b><p class="small muted">${esc(s[1])}</p></div></div>`).join("")}</div>
-    ${(u.fills || []).length ? `<h3>Dicas de gramática</h3><div class="stack">${u.fills.map((f) => `<div class="notice info small">${esc(f[3])}</div>`).join("")}</div>` : ""}`);
+  const pr = (p) => p ? `<span class="pron">${esc(p)}</span>` : "";
+  modal(`<div class="row between"><div><p class="eyebrow">${esc(u.moduleTitle || u.cefr || "")} · Guia</p><h2>${esc(u.title)}</h2></div><button class="btn ghost small" data-a="close" aria-label="Fechar">${icon("x")}</button></div>
+    <p class="muted">${esc(u.goal || "")}</p>
+    <h3>Palavras</h3><div class="list">${u.words.map((w) => `<div class="li"><button class="btn ghost small" data-a="play" data-text="${esc(w[0])}" aria-label="Ouvir">${icon("speaker")}</button><div class="grow"><b>${esc(w[0])}</b> <span class="muted">${esc(w[1])}</span><br>${pr(w[2])}</div></div>`).join("")}</div>
+    ${u.dialogue && u.dialogue.length ? `<h3>Diálogo</h3>${dialogueHTML(u.dialogue, true)}<button class="btn" data-a="play-dlg" data-v="${esc(u.id)}">${icon("speaker")} Ouvir o diálogo inteiro</button>`
+      : `<h3>Frases-chave</h3><div class="list">${u.sentences.map((s) => `<div class="li"><button class="btn ghost small" data-a="play" data-text="${esc(s[0])}" aria-label="Ouvir">${icon("speaker")}</button><div class="grow"><b>${esc(s[0])}</b><p class="small muted">${esc(s[1])}</p>${pr(s[2])}</div></div>`).join("")}</div>`}
+    ${(u.fills || []).length ? `<h3>Dicas de gramática</h3><div class="stack">${u.fills.map((f) => `<div class="notice info small">${esc(f[3])}</div>`).join("")}</div>` : ""}
+    ${Store.sample && u.dialogue ? `<button class="btn primary" data-a="roleplay" data-v="${esc(u.id)}">${icon("chat")} Praticar esta situação com a professora</button>` : ""}`);
 }
 
 /* ---------- player: topo, rodapé e telas finais ---------- */
@@ -230,5 +138,21 @@ function lessonEndHTML() {
       <div class="es" style="--c:var(--brand)"><span>Tempo</span><b class="num">${icon("clock")} ${mm}:${pad(ss)}</b></div>
     </div>
     ${(() => { const wrong = Runner.results.filter((r) => !r.ok && r.ex.t !== "match"); return wrong.length ? `<details class="card flat review-box"><summary><b>Revisar ${wrong.length} ${wrong.length === 1 ? "erro" : "erros"}</b></summary><div class="list">${wrong.slice(0, 8).map((r) => `<div class="li"><div class="grow"><p class="small muted ell">${esc(r.ex.q || r.ex.audio || "")}</p><p><b>${esc(r.ex.a)}</b>${r.ex.expl ? ` <span class="muted small">— ${esc(r.ex.expl)}</span>` : ""}</p></div>${r.ex.en ? `<button class="btn ghost small" data-a="play" data-text="${esc(r.ex.en)}" aria-label="Ouvir">${icon("speaker")}</button>` : ""}</div>`).join("")}</div></details>` : ""; })()}
+    ${lessonReportHTML()}
     <button class="btn primary big wide" data-a="run-done">Continuar</button></div></div>`;
+}
+/* relatório: palavras aprendidas e o que melhorar */
+function lessonReportHTML() {
+  const words = [...new Map(Runner.results.filter((r) => r.ok && r.ex.word && r.ex.en).map((r) => [r.ex.en, r.ex])).values()];
+  const intros = Runner.items.filter((x) => x.t === "intro").map((x) => ({ en: x.en, pt: x.pt }));
+  const learned = [...new Map([...intros, ...words].map((w) => [w.en, w])).values()].slice(0, 12);
+  const SK = { vocab: "Vocabulário", listen: "Escuta", grammar: "Gramática", writing: "Escrita e tradução", speaking: "Pronúncia", dialogue: "Diálogos" };
+  const by = {}; for (const r of Runner.results) { const k = r.ex.skill; if (!k || r.ex.t === "match") continue; by[k] = by[k] || [0, 0]; by[k][1]++; if (r.ok) by[k][0]++; }
+  const weak = Object.entries(by).filter(([, v]) => v[1] && v[0] / v[1] < 0.8).sort((a, b) => a[1][0] / a[1][1] - b[1][0] / b[1][1]).map(([k]) => SK[k] || k);
+  const u = Runner.unit;
+  return `<div class="card flat review-box stack" style="gap:10px">
+    ${learned.length ? `<div><p class="eyebrow">Palavras desta lição</p><div class="chips-wrap">${learned.map((w) => `<button class="chip" data-a="play" data-text="${esc(w.en)}">${esc(w.en)} <span class="muted">${esc(w.pt || "")}</span></button>`).join("")}</div></div>` : ""}
+    <div><p class="eyebrow">O que melhorar</p><p class="small">${weak.length ? `Treine mais: <b>${weak.join(", ")}</b>. Esses erros entram na sua revisão automática.` : "Nada pendente: você foi bem em tudo. Continue assim!"}</p></div>
+    ${u && u.dialogue && Store.sample ? `<button class="btn" data-a="roleplay" data-v="${esc(u.id)}">${icon("chat")} Conversar com a professora sobre esta situação</button>` : ""}
+  </div>`;
 }
