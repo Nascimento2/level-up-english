@@ -29,6 +29,7 @@ window.LUE_STANDALONE = true;
       </form>
       ${isUp ? "" : `<button type="button" class="btn ghost small" data-auth="forgot">Esqueci minha senha</button>`}
       <button type="button" class="btn ghost small" data-auth="guest">Usar sem conta (progresso só neste aparelho)</button>
+      <a class="small muted" href="privacy.html" style="text-align:center">Política de Privacidade</a>
     </div></div>`;
   }
   const MSG = {
@@ -88,6 +89,13 @@ window.LUE_STANDALONE = true;
     if (s) session = s;
   });
   window.LUE_logout = async () => { try { localStorage.removeItem(GUEST_KEY); localStorage.removeItem("lue-state-v1"); } catch {} await sb.auth.signOut(); location.reload(); };
+  window.LUE_deleteAccount = async () => {
+    const { data: s } = await sb.auth.getSession(); if (!s.session) throw new Error("sem login");
+    const r = await fetch(SB_URL + "/functions/v1/delete-account", { method: "POST", headers: { Authorization: "Bearer " + s.session.access_token, apikey: SB_KEY } });
+    if (!r.ok) throw new Error("falhou");
+    try { localStorage.clear(); } catch {}
+    await sb.auth.signOut().catch(() => {}); location.reload();
+  };
   window.LUE_login = () => { try { localStorage.removeItem(GUEST_KEY); } catch {} location.reload(); };
 
   /* ---------- banco: documentos por caminho ---------- */

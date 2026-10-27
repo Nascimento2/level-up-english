@@ -309,7 +309,8 @@ function vProfile() {
     <section class="card stack"><div class="row between"><h3>Plano</h3><span class="chip ${S.plan === "premium" ? "xp" : ""}">${S.plan === "premium" ? "Premium" : "Gratuito"}</span></div><p class="small muted">Lições, missões, ranking e desafios são sempre gratuitos.</p><button class="btn" data-a="go" data-v="plans" style="align-self:flex-start">Comparar planos</button></section>
     <section class="card stack"><h3>Conta</h3><p class="small muted">${Store.mode === "cloud" ? "Você entrou com seu e-mail. Seu progresso é salvo na nuvem e continua de onde parou em qualquer aparelho." : "Modo sem conta: o progresso está salvo só neste aparelho. Entre com uma conta para salvar na nuvem."}</p>
       ${viewState.confirmReset ? `<div class="notice">Isso apaga todo o seu progresso, XP, medalhas e moedas. Não dá para desfazer.<div class="row" style="margin-top:8px"><button class="btn danger" data-a="reset-yes">Apagar tudo</button><button class="btn" data-a="reset-no">Cancelar</button></div></div>` : `<button class="btn danger" data-a="reset" style="align-self:flex-start">Recomeçar do zero</button>`}
-      ${window.LUE_STANDALONE ? (Store.mode === "cloud" ? `<button class="btn" data-a="logout" style="align-self:flex-start">Sair da conta</button>` : `<button class="btn primary" data-a="login" style="align-self:flex-start">Entrar ou criar conta</button>`) : ""}</section>`;
+      ${window.LUE_STANDALONE ? (Store.mode === "cloud" ? `<button class="btn" data-a="logout" style="align-self:flex-start">Sair da conta</button>
+        ${viewState.confirmDelete ? `<div class="notice">Isso apaga sua conta, seu progresso e suas mensagens para sempre. Não dá para desfazer.<div class="row" style="margin-top:8px"><button class="btn danger" data-a="del-account-yes">Apagar minha conta</button><button class="btn" data-a="del-account-no">Cancelar</button></div></div>` : `<button class="btn danger" data-a="del-account" style="align-self:flex-start">Apagar minha conta</button>`}` : `<button class="btn primary" data-a="login" style="align-self:flex-start">Entrar ou criar conta</button>`) + `<a class="small muted" href="privacy.html">Política de Privacidade</a>` : ""}</section>`;
 }
 
 /* ---------- painel de progresso ---------- */
@@ -486,6 +487,9 @@ const A = {
     leaveRun();
   },
   node: (el) => startNode(el.dataset.u, el.dataset.k),
+  "del-account": () => { viewState.confirmDelete = true; rerender(); },
+  "del-account-no": () => { viewState.confirmDelete = false; rerender(); },
+  "del-account-yes": async () => { toast("Apagando sua conta…"); try { await window.LUE_deleteAccount(); } catch { toast("Não consegui apagar agora. Tente de novo ou escreva para o suporte."); } },
   logout: () => { flush(); setTimeout(() => window.LUE_logout && window.LUE_logout(), 400); },
   login: () => window.LUE_login && window.LUE_login(),
   music: () => { musicToggle(); if (currentView !== "run") rerender(); },
