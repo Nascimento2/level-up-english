@@ -1,0 +1,35 @@
+{
+  "id": "/",
+  "name": "Level Up English",
+  "short_name": "Level Up",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": [
+    "education"
+  ],
+  "description": "Aprenda inglês alguns minutos por dia.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3F4FA",
+  "theme_color": "#3152F5",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

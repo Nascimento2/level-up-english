@@ -1,6 +1,6 @@
 /* Guarda o app no aparelho para abrir rápido e funcionar sem internet. */
-const CACHE = "lue-dbbaeb9577";
-const SHELL = ["ai.js", "content.js", "core.js", "duo.js", "gen.js", "./", "lesson.js", "levels.js", "library.js", "manifest.webmanifest", "mascots.js", "modules-a.js", "modules-b.js", "modules-c.js", "platform.js", "privacy.html", "rooms.js", "social.js", "views.js", "vendor/supabase.js", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png"];
+const CACHE = "lue-f623efa792";
+const SHELL = ["ai.js", "content.js", "core.js", "duo.js", "gen.js", "./", "lesson.js", "levels.js", "library.js", "manifest.json", "mascots.js", "modules-a.js", "modules-b.js", "modules-c.js", "platform.js", "privacy.html", "rooms.js", "social.js", "views.js", "vendor/supabase.js", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", (e) => {
