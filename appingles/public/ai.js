@@ -12,7 +12,7 @@ function aiAllowed() {
 function aiCount() { if (S.ai.day !== today()) { S.ai.day = today(); S.ai.n = 0; } S.ai.n++; }
 function aiErrorCopy(e) {
   const c = e && e.code;
-  if (c === "not_granted" || c === "sampling_disabled") return "O professor de IA não foi liberado nesta visualização. Permita o uso do Claude quando o app pedir.";
+  if (c === "not_granted" || c === "sampling_disabled") return "A professora de IA ainda não foi ativada neste app. Enquanto isso, pratique com as lições e os diálogos da trilha.";
   if (c === "rate_limited") return "Muitas mensagens em pouco tempo. Espere um minutinho e tente de novo.";
   if (c === "session_expired") return "Sua sessão expirou. Entre na sua conta de novo e recarregue a página.";
   if (c === "invalid_json") return "A resposta veio num formato inesperado. Tente enviar de novo.";
