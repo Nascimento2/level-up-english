@@ -1,4 +1,4 @@
-/* Level Up English — professor de IA (conversa por texto e voz), explicações e aulas sob medida. */
+/* Aprendendo com a Luna — professor de IA (conversa por texto e voz), explicações e aulas sob medida. */
 "use strict";
 
 const AI_FREE_DAILY = 40;
@@ -12,9 +12,9 @@ function aiAllowed() {
 function aiCount() { if (S.ai.day !== today()) { S.ai.day = today(); S.ai.n = 0; } S.ai.n++; }
 function aiErrorCopy(e) {
   const c = e && e.code;
-  if (c === "not_granted" || c === "sampling_disabled") return "A professora de IA ainda não foi ativada neste app. Enquanto isso, pratique com as lições e os diálogos da trilha.";
+  if (c === "not_granted" || c === "sampling_disabled") return "O professor de IA não foi liberado nesta visualização. Permita o uso do Claude quando o app pedir.";
   if (c === "rate_limited") return "Muitas mensagens em pouco tempo. Espere um minutinho e tente de novo.";
-  if (c === "session_expired") return "Sua sessão expirou. Entre na sua conta de novo e recarregue a página.";
+  if (c === "session_expired") return "Sua sessão expirou. Entre de novo no Claude e recarregue a página.";
   if (c === "invalid_json") return "A resposta veio num formato inesperado. Tente enviar de novo.";
   if (c === "cancelled") return "";
   return "Não consegui falar com o professor agora. Tente de novo em instantes.";
@@ -29,7 +29,7 @@ function startScenario(id) {
 }
 function rules() {
   const lvl = studying(); const sc = Chat.scenario;
-  return `You are "Teacher Lia", a friendly English teacher for Brazilian learners in the app Level Up English.
+  return `You are "Teacher Luna", a friendly English teacher for Brazilian learners in the app Aprendendo com a Luna.
 Learner's English level (CEFR): ${lvl}; course level ${typeof currentLevel === "function" ? currentLevel() : 1} of an endless course. Learner's main goal: ${GOALS[S.profile.goal] || "everyday conversation"}.
 Scenario: ${sc.title} — ${sc.desc}. You play the other person in this scenario (in "Conversa livre" you are a friendly conversation partner).
 Rules:

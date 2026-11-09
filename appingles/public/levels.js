@@ -1,4 +1,4 @@
-/* Level Up English — níveis (1 a 10 fixos, 11 em diante gerados), trilha e teste de cada nível. */
+/* Aprendendo com a Luna — níveis (1 a 10 fixos, 11 em diante gerados), trilha e teste de cada nível. */
 "use strict";
 
 /* ---------- situações dos módulos viram unidades ---------- */
@@ -149,9 +149,21 @@ function vPath() {
     ${(CUSTOM.lessons || []).length ? `<section class="card stack"><h3>Conteúdo extra</h3>${allUnits().filter((u) => u.custom).map((u) => unitCard(u, true)).join("")}</section>` : ""}`;
   return `<div class="path-layout"><div class="path-main">
       <div class="mobile-only">${statusBar()}</div>
+      ${lunaHello()}
       ${notes.length ? `<section class="card"><p class="eyebrow">Para você</p><div class="list">${notes.join("")}</div></section>` : ""}
       ${!S.flags.placementDone ? `<button class="mode" data-a="placement"><span class="ic">${icon("target")}</span><span><b>Teste de nivelamento</b><br><span class="small muted">Descubra seu nível em 4 minutos e pule o que já sabe</span></span></button>` : ""}
       ${levels}${extras}</div>${side}</div>`;
+}
+/* a gatinha Luna cumprimenta na tela inicial */
+function lunaHello() {
+  const h = new Date().getHours(); const hi = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+  const name = String((S.profile && S.profile.username) || "").replace(/^@/, "").trim();
+  const done = D().xp > 0;
+  const lines = done
+    ? ["Você já estudou hoje. Que orgulho!", "Mais uma lição para ganhar mais gatinhos?", "Sua ofensiva está acesa. Continue assim!"]
+    : ["Eu sou a Luna. Bora aprender inglês hoje?", "Cada resposta certa vira uma chuva de gatinhos!", "Uma lição rapidinha e a gente já começa."];
+  const line = lines[new Date().getDate() % lines.length];
+  return `<div class="luna-hi">${mascot("mia", "wave", 92)}<span class="speech"><b>${esc(hi)}${name ? ", " + esc(name) : ""}!</b> ${esc(line)}</span></div>`;
 }
 function levelProgress(n) { const o = levelOrder(n); if (!o.length) return 0; const done = levelUnits(n).flatMap(unitNodes).filter(nodeDone).length; return Math.round((done / o.length) * 100); }
 

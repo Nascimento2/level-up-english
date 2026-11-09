@@ -1,4 +1,4 @@
-/* Level Up English — trilha de lições, vidas, baús, combos, sons e telas de comemoração. */
+/* Aprendendo com a Luna — trilha de lições, vidas, baús, combos, sons e telas de comemoração. */
 "use strict";
 
 /* ---------- estado extra ---------- */
@@ -129,8 +129,8 @@ function lessonEndHTML() {
   }
   return `<div class="runner"><div class="stack celebrate end-screen">
     <div class="confetti" aria-hidden="true">${Array.from({ length: 18 }, (_, i) => `<i style="--x:${(i * 37) % 100};--d:${(i % 6) * 0.12}s;--c:${UNIT_COLORS[i % 6]}"></i>`).join("")}</div>
-    <div class="row end-mascots" style="justify-content:center;gap:0">${acc >= 70 ? mascot("mia", "cheer", 80) : ""}${mascot("bolota", "cheer", 120)}${acc >= 70 ? mascot("capi", "cheer", 80) : ""}</div>
-    <h1 class="end-title">${Runner.mode === "lesson" ? "Lição concluída!" : "Treino concluído!"}</h1>
+    <div class="row end-mascots" style="justify-content:center;gap:0">${acc >= 70 ? mascot("bolota", "cheer", 80) : ""}${mascot("mia", "cheer", 120)}${acc >= 70 ? mascot("capi", "cheer", 80) : ""}</div>
+    <h1 class="end-title">${Runner.mode === "lesson" ? "Lição concluída!" : "Treino concluído!"}</h1><p class="muted">${acc >= 70 ? "A Luna está muito orgulhosa de você!" : "A Luna sabe que você consegue. Bora de novo!"}</p>
     ${Runner.heartGain ? `<p class="chip ok">${HEART_SVG()} +1 vida recuperada</p>` : ""}
     <div class="end-stats">
       <div class="es" style="--c:var(--xp)"><span>Total de XP</span><b class="num">${icon("bolt")} ${Runner.xp}</b></div>

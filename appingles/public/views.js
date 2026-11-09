@@ -1,4 +1,4 @@
-/* Level Up English — telas, navegação e ações. */
+/* Aprendendo com a Luna — telas, navegação e ações. */
 "use strict";
 
 let currentView = "home", viewState = { friendsTab: "amigos", rankScope: "global", rankPeriod: "week", rankCrit: "xp", rewardsTab: "avatares", adminTab: "usuarios", teams: null, adminReports: null };
@@ -11,7 +11,7 @@ const BOTTOM = [["learn", "Aprender", "home"], ["modules", "Conversação", "cha
 
 function renderShell() {
   $("#app").innerHTML = `<div class="shell">
-    <nav class="side" aria-label="Menu principal"><div class="logo">${LOGO}<span>Level Up English</span></div><div id="side-nav"></div><div class="spacer"></div><div id="side-foot"></div></nav>
+    <nav class="side" aria-label="Menu principal"><div class="logo">${LOGO}<span>Aprendendo com a Luna</span></div><div id="side-nav"></div><div class="spacer"></div><div id="side-foot"></div></nav>
     <main class="main"><div class="wrap" id="view"></div></main>
     <nav class="bottom" aria-label="Menu" id="bottom-nav"></nav></div>`;
 }
@@ -62,11 +62,11 @@ function ring(pct, label) {
 function vOnboarding() {
   const p = S.profile; const opt = (name, val, label, cur) => `<button type="button" data-a="ob-pick" data-k="${name}" data-v="${val}" aria-pressed="${cur === val}">${label}</button>`;
   return `<div class="stack" style="max-width:620px;margin:0 auto;gap:20px">
-    <div class="row">${LOGO}<b style="font-family:var(--display);font-size:1.2rem">Level Up English</b></div>
-    <div class="row ob-mascots">${mascot("mia", "wave", 84)}${mascot("bolota", "wave", 110)}${mascot("capi", "wave", 84)}</div>
-    <p class="small muted">Bolota, Mia e Capi vão estudar com você.</p>
+    <div class="row">${LOGO}<b style="font-family:var(--display);font-size:1.2rem">Aprendendo com a Luna</b></div>
+    <div class="row ob-mascots">${mascot("bolota", "wave", 84)}${mascot("mia", "wave", 110)}${mascot("capi", "wave", 84)}</div>
+    <p class="small muted">A gatinha Luna, a Bolota e a Capi vão estudar com você.</p>
     <h1>Inglês de verdade, alguns minutos por dia.</h1>
-    <p class="muted">Vamos montar seu plano. ${Store.mode === "cloud" ? "Você entrou com sua conta: o progresso fica salvo e sincroniza entre seus aparelhos." : "Neste modo o progresso fica salvo só neste aparelho."}</p>
+    <p class="muted">Vamos montar seu plano. ${Store.mode === "cloud" ? "Sua conta é a mesma do Claude: o progresso fica salvo e sincroniza entre seus aparelhos." : "Neste modo o progresso fica salvo só neste aparelho."}</p>
     <form class="card stack" id="ob-form" style="gap:18px">
       <label class="field">Nome de usuário <input type="text" id="ob-name" maxlength="20" placeholder="ex.: ana.silva" value="${esc(p.username)}" autocomplete="off" autocapitalize="off"><span class="small muted">3 a 20 letras, números, ponto ou _. É assim que seus amigos vão te achar.</span></label>
       <div class="stack" style="gap:6px"><b>Seu nível de inglês hoje</b><div class="seg">${opt("level0", "zero", "Do zero", p.level0)}${opt("level0", "basico", "Básico", p.level0)}${opt("level0", "intermediario", "Intermediário", p.level0)}${opt("level0", "avancado", "Avançado", p.level0)}</div></div>
@@ -125,7 +125,7 @@ function vHome() {
       <div class="card stack"><div class="row between"><h3>Missões do dia</h3><button class="btn ghost small" data-a="go" data-v="missions">Ver todas</button></div>${S.missions.list.map(missionRow).join("")}</div>
       <div class="card stack"><h3>Atalhos</h3>
         <button class="mode" data-a="start-review" ${due ? "" : "disabled"}><span class="ic">${icon("repeat")}</span><span><b>Revisar ${due} ${due === 1 ? "palavra" : "palavras"}</b><br><span class="small muted">${due ? "Hora certa de revisar para não esquecer" : "Nenhuma revisão pendente hoje"}</span></span></button>
-        <button class="mode" data-a="go" data-v="talk"><span class="ic">${icon("chat")}</span><span><b>Conversar com a professora Lia</b><br><span class="small muted">Pratique por texto ou voz com correções</span></span></button>
+        <button class="mode" data-a="go" data-v="talk"><span class="ic">${icon("chat")}</span><span><b>Conversar com a professora Luna</b><br><span class="small muted">Pratique por texto ou voz com correções</span></span></button>
         <button class="mode" data-a="go" data-v="ranking"><span class="ic">${icon("trophy")}</span><span><b>${rank ? `Você está em ${rank}º na semana` : "Ranking semanal"}</b><br><span class="small muted">Veja quem está estudando mais</span></span></button>
         ${!S.flags.placementDone ? `<button class="mode" data-a="placement"><span class="ic">${icon("target")}</span><span><b>Teste de nivelamento</b><br><span class="small muted">Descubra seu nível em 4 minutos</span></span></button>` : ""}
       </div>
@@ -177,8 +177,8 @@ function unitCard(u, unlocked, del = false) {
 function vTalk() {
   if (!Chat.scenario) {
     const last = S.convo.sessions.slice(-1)[0];
-    return `${head("Conversar", `Pratique com a professora Lia, uma IA que se adapta ao seu nível (${studying()}).`)}
-      ${!Store.sample ? `<div class="notice">A professora de IA precisa de uma conta. Vá em Meu Perfil e toque em Entrar.</div>` : ""}
+    return `${head("Conversar", `Pratique com a professora Luna, uma IA que se adapta ao seu nível (${studying()}).`)}
+      ${!Store.sample ? `<div class="notice">O professor de IA só funciona com o app aberto no Claude. Nesta visualização ele está indisponível.</div>` : ""}
       <button class="mode" data-a="go" data-v="modules"><span class="ic">${icon("chat")}</span><span><b>Situações reais dos 25 módulos</b><br><span class="small muted">Escolha uma situação (aeroporto, médico, entrevista…) e pratique com a professora</span></span></button>
       <section class="grid3">${LUE_SCENARIOS.map((s) => `<button class="mode" data-a="scenario" data-v="${s.id}" ${Store.sample ? "" : "disabled"}><span class="ic">${icon(s.id === "free" ? "chat" : s.id === "interview" ? "user" : s.id === "airport" ? "target" : "speaker")}</span><span><b>${esc(s.title)}</b><br><span class="small muted">${esc(s.desc)}</span></span></button>`).join("")}</section>
       <section class="card stack"><h3>Como funciona</h3><ol class="stack" style="margin:0;padding-left:20px;gap:6px">
@@ -204,7 +204,7 @@ function vTalk() {
 function vFriends() {
   const t = viewState.friendsTab; const online = onlineIds();
   const tabs = `<div class="tabs" role="tablist">${[["amigos", "Amigos"], ["desafios", "Desafios"], ["grupos", "Grupos e equipes"]].map(([k, l]) => `<button role="tab" data-a="ftab" data-v="${k}" aria-selected="${t === k}">${l}</button>`).join("")}</div>`;
-  const cloudNote = Store.mode !== "cloud" ? `<div class="notice">Amigos, grupos e desafios online precisam de uma conta. Vá em Meu Perfil e toque em Entrar.</div>` : "";
+  const cloudNote = Store.mode !== "cloud" ? `<div class="notice">Amigos, grupos e desafios online precisam do app aberto no Claude com sua conta.</div>` : "";
   let body = "";
   if (t === "amigos") {
     const pend = FREQ_IN.filter((x) => x.status === "pending");
@@ -249,7 +249,7 @@ function vRanking() {
       ${myPos >= 0 ? `<div class="notice info">Sua posição: <b>${myPos + 1}º</b> de ${rows.length} · <span class="num">${rows[myPos].v}</span> ${crit.unit}</div>` : `<div class="notice">Você está oculto do ranking (ajuste em Meu Perfil).</div>`}
       ${podium}
       <div class="list">${rows.map((r, k) => `<div class="rank-row ${r.p.id === meId ? "me" : ""}"><span class="pos ${k === 0 ? "p1" : ""}">${k + 1}</span>${avatarHTML(r.p, 40)}<div style="min-width:0"><b class="ell">${esc(r.p.u)}${r.p.id === meId ? " (você)" : ""}</b><p class="small muted ell">${r.p.ti ? esc(r.p.ti) + " · " : ""}${r.p.cefr ? "Certificado " + esc(r.p.cefr) : "Estudando " + esc(r.p.studying || "A1")} · acerto ${r.p.acc || 0}%</p></div><div class="row" style="gap:4px"><b class="num">${r.v}</b>${r.p.id !== meId && Store.mode === "cloud" ? `<button class="btn ghost small" data-a="report" data-v="${r.p.id}" aria-label="Denunciar">${icon("flag")}</button>` : ""}</div></div>`).join("") || '<p class="empty">Ninguém por aqui ainda.</p>'}</div>
-      ${Store.mode !== "cloud" ? '<p class="small muted">Modo sem conta: o ranking com outras pessoas aparece quando você entra com uma conta.</p>' : ""}
+      ${Store.mode !== "cloud" ? '<p class="small muted">Modo local: o ranking com outras pessoas aparece quando o app está aberto no Claude.</p>' : ""}
     </section>
     <section class="card stack"><h3>Como garantimos um ranking justo</h3><ul class="stack small" style="margin:0;padding-left:20px;gap:4px"><li>O XP vem de respostas certas, revisões e conversas; respostas rápidas demais não contam.</li><li>Repetir a mesma lição várias vezes no dia rende menos XP, e o XP diário diminui depois de 800 pontos.</li><li>Rankings de domínio e evolução usam só testes de nível, não tempo de uso.</li><li>Não é possível comprar posição. Contas suspeitas podem ser denunciadas e removidas pelo administrador.</li></ul></section>`;
 }
@@ -307,10 +307,9 @@ function vProfile() {
       ${sw("reqs", p.reqs !== false, "Aceitar pedidos de amizade", "Desligue para ninguém novo conseguir te adicionar.")}
       ${sw("showRank", p.showRank !== false, "Aparecer no ranking", "Desligue para estudar sem competir.")}</section>
     <section class="card stack"><div class="row between"><h3>Plano</h3><span class="chip ${S.plan === "premium" ? "xp" : ""}">${S.plan === "premium" ? "Premium" : "Gratuito"}</span></div><p class="small muted">Lições, missões, ranking e desafios são sempre gratuitos.</p><button class="btn" data-a="go" data-v="plans" style="align-self:flex-start">Comparar planos</button></section>
-    <section class="card stack"><h3>Conta</h3><p class="small muted">${Store.mode === "cloud" ? "Você entrou com seu e-mail. Seu progresso é salvo na nuvem e continua de onde parou em qualquer aparelho." : "Modo sem conta: o progresso está salvo só neste aparelho. Entre com uma conta para salvar na nuvem."}</p>
+    <section class="card stack"><h3>Conta</h3><p class="small muted">${Store.mode === "cloud" ? "Você entra com sua conta do Claude. Seu progresso é salvo na nuvem e continua de onde parou em qualquer aparelho." : "Modo local: o progresso está salvo só neste navegador. Abra o app no Claude para sincronizar."}</p>
       ${viewState.confirmReset ? `<div class="notice">Isso apaga todo o seu progresso, XP, medalhas e moedas. Não dá para desfazer.<div class="row" style="margin-top:8px"><button class="btn danger" data-a="reset-yes">Apagar tudo</button><button class="btn" data-a="reset-no">Cancelar</button></div></div>` : `<button class="btn danger" data-a="reset" style="align-self:flex-start">Recomeçar do zero</button>`}
-      ${window.LUE_STANDALONE ? (Store.mode === "cloud" ? `<button class="btn" data-a="logout" style="align-self:flex-start">Sair da conta</button>
-        ${viewState.confirmDelete ? `<div class="notice">Isso apaga sua conta, seu progresso e suas mensagens para sempre. Não dá para desfazer.<div class="row" style="margin-top:8px"><button class="btn danger" data-a="del-account-yes">Apagar minha conta</button><button class="btn" data-a="del-account-no">Cancelar</button></div></div>` : `<button class="btn danger" data-a="del-account" style="align-self:flex-start">Apagar minha conta</button>`}` : `<button class="btn primary" data-a="login" style="align-self:flex-start">Entrar ou criar conta</button>`) + `<a class="small muted" href="privacy.html">Política de Privacidade</a>` : ""}</section>`;
+      ${window.LUE_STANDALONE ? (Store.mode === "cloud" ? `<button class="btn" data-a="logout" style="align-self:flex-start">Sair da conta</button>` : `<button class="btn primary" data-a="login" style="align-self:flex-start">Entrar ou criar conta</button>`) : ""}</section>`;
 }
 
 /* ---------- painel de progresso ---------- */
@@ -487,9 +486,6 @@ const A = {
     leaveRun();
   },
   node: (el) => startNode(el.dataset.u, el.dataset.k),
-  "del-account": () => { viewState.confirmDelete = true; rerender(); },
-  "del-account-no": () => { viewState.confirmDelete = false; rerender(); },
-  "del-account-yes": async () => { toast("Apagando sua conta…"); try { await window.LUE_deleteAccount(); } catch { toast("Não consegui apagar agora. Tente de novo ou escreva para o suporte."); } },
   logout: () => { flush(); setTimeout(() => window.LUE_logout && window.LUE_logout(), 400); },
   login: () => window.LUE_login && window.LUE_login(),
   music: () => { musicToggle(); if (currentView !== "run") rerender(); },
@@ -529,7 +525,7 @@ const A = {
   "group-new": () => { if (!needCloud()) return; modal(`<h2>Criar grupo</h2><form class="stack" id="group-form"><label class="field">Nome do grupo <input type="text" id="group-name" maxlength="40" placeholder="ex.: Turma do inglês"></label><label class="field">Meta semanal do grupo (XP) <input type="number" id="group-goal" value="1500" min="200" step="100"></label><div class="row"><button class="btn primary" type="submit">Criar</button><button class="btn" type="button" data-a="close">Cancelar</button></div></form>`); },
   "group-open": (el) => openGroup(el.dataset.v),
   "group-leave": (el) => leaveGroup(el.dataset.v),
-  "teams-load": async () => { if (Store.mode !== "cloud") return toast("Disponível quando você entra com uma conta."); toast("Carregando equipes…"); try { viewState.teams = await teamRanking(); } catch { viewState.teams = []; } rerender(); },
+  "teams-load": async () => { if (Store.mode !== "cloud") return toast("Disponível com o app aberto no Claude."); toast("Carregando equipes…"); try { viewState.teams = await teamRanking(); } catch { viewState.teams = []; } rerender(); },
   copy: async (el) => { try { await navigator.clipboard.writeText(el.dataset.v); toast("Copiado!"); } catch { toast("Copie: " + el.dataset.v); } },
   rscope: (el) => { viewState.rankScope = el.dataset.v; rerender(); if (el.dataset.v === "teams" && !viewState.teams) A["teams-load"](); },
   rper: (el) => { viewState.rankPeriod = el.dataset.v; rerender(); },

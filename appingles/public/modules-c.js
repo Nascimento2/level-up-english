@@ -1,4 +1,4 @@
-/* Level Up English — módulos de conversação do dia a dia (19 a 25). */
+/* Aprendendo com a Luna — módulos de conversação do dia a dia (19 a 25). */
 window.LUE_MODULES = window.LUE_MODULES || [];
 LUE_MODULES.push(
 { n: 19, id: "m19", title: "Barbearia, salão e atendimento", icon: "star", s: [

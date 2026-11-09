@@ -1,4 +1,4 @@
-/* Level Up English — núcleo: utilidades, estado, armazenamento, gamificação. */
+/* Aprendendo com a Luna — núcleo: utilidades, estado, armazenamento, gamificação. */
 "use strict";
 
 /* ---------- utilidades ---------- */
@@ -160,7 +160,7 @@ const SHOP = {
     { id: "cefr", name: "Certificada", price: 0, req: "test_A2" },
   ],
   themes: [
-    { id: "azul", name: "Azul Level Up", price: 0 }, { id: "coral", name: "Coral", price: 100 }, { id: "menta", name: "Menta", price: 100 },
+    { id: "azul", name: "Azul Luna", price: 0 }, { id: "coral", name: "Coral", price: 100 }, { id: "menta", name: "Menta", price: 100 },
     { id: "violeta", name: "Violeta", price: 150 }, { id: "ouro", name: "Ouro", price: 0, lvl: 5 },
   ],
   titles: [

@@ -1,4 +1,4 @@
-/* Level Up English — currículo base (A1 → B1).
+/* Aprendendo com a Luna — currículo base (A1 → B1).
    Cada unidade gera duas lições: "Vocabulário" e "Frases e diálogos".
    words:     [inglês, português]
    sentences: [inglês, português]
@@ -110,7 +110,7 @@ window.LUE_PLACEMENT = [
 ];
 
 window.LUE_SCENARIOS = [
-  { id: "free", title: "Conversa livre", desc: "Fale sobre qualquer assunto", opener: "Hi! I'm your English teacher. What would you like to talk about today?" },
+  { id: "free", title: "Conversa livre", desc: "Fale sobre qualquer assunto", opener: "Hi! I'm Luna, your English teacher. What would you like to talk about today?" },
   { id: "cafe", title: "Pedir um café", desc: "Você é o cliente numa cafeteria", opener: "Good morning! Welcome to Sunny Café. What can I get for you?" },
   { id: "foreigner", title: "Conversar com um estrangeiro", desc: "Um turista puxa conversa com você", opener: "Hey, excuse me! Is this your city? I'm visiting from Canada and I'm a bit lost." },
   { id: "interview", title: "Entrevista de emprego", desc: "Você é o candidato", opener: "Thanks for coming in today. Could you start by telling me a little about yourself?" },

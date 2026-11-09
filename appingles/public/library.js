@@ -1,4 +1,4 @@
-/* Level Up English — biblioteca de Conversação (25 módulos), área de Vocabulário e roleplay com a IA. */
+/* Aprendendo com a Luna — biblioteca de Conversação (25 módulos), área de Vocabulário e roleplay com a IA. */
 "use strict";
 
 const UNIT_LEVEL = {};

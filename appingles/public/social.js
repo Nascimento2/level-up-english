@@ -1,7 +1,7 @@
-/* Level Up English — amigos, incentivos, grupos, desafios online e rankings. */
+/* Aprendendo com a Luna — amigos, incentivos, grupos, desafios online e rankings. */
 "use strict";
 
-function needCloud() { if (Store.mode !== "cloud") { toast("Recursos com amigos precisam de uma conta: vá em Meu Perfil e toque em Entrar."); return false; } if (Store.readOnly) { toast("Seu acesso a este app é só de leitura."); return false; } return true; }
+function needCloud() { if (Store.mode !== "cloud") { toast("Recursos com amigos precisam do app aberto no Claude com sua conta."); return false; } if (Store.readOnly) { toast("Seu acesso a este app é só de leitura."); return false; } return true; }
 function displayPlayer(id) { if (id === Store.uid) return { id, ...publicDoc() }; return playerById(id) || { id, u: "Aluno", av: null }; }
 
 /* ---------- amigos ---------- */

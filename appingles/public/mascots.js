@@ -1,10 +1,10 @@
-/* Level Up English — mascotes animados (Bolota, a pug; Mia, a gatinha; Capi, a capivara) e trilha sonora. */
+/* Aprendendo com a Luna — mascotes animados (Bolota, a pug; Luna, a gatinha; Capi, a capivara) e trilha sonora. */
 "use strict";
 
 /* ---------- mascotes ---------- */
 const MASCOTS = {
   bolota: { name: "Bolota", kind: "pug" },
-  mia: { name: "Mia", kind: "gata" },
+  mia: { name: "Luna", kind: "gata" },
   capi: { name: "Capi", kind: "capivara" },
 };
 const MASCOT_ORDER = ["bolota", "mia", "capi"];

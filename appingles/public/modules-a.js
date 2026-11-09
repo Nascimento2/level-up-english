@@ -1,4 +1,4 @@
-/* Level Up English — módulos de conversação do dia a dia (1 a 9).
+/* Aprendendo com a Luna — módulos de conversação do dia a dia (1 a 9).
    Formato de cada situação:
    t: título · g: objetivo
    w: "inglês|português|pronúncia; ..."  (pronúncia simplificada para brasileiros, sílaba forte em MAIÚSCULAS)

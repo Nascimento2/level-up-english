@@ -1,4 +1,4 @@
-/* Level Up English — geração de lições para os níveis 11 em diante.
+/* Aprendendo com a Luna — geração de lições para os níveis 11 em diante.
    1) Tenta criar com a IA, com controle de qualidade (formato, tamanho, tradução, repetição).
    2) Se a IA não estiver disponível ou falhar, usa um gerador próprio que combina personagens,
       lugares, tempos verbais e vocabulário — funciona sem internet e nunca acaba. */

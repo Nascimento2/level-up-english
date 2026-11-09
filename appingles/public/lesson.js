@@ -1,4 +1,4 @@
-/* Level Up English — lições, exercícios, testes de nível e o "player" de exercícios. */
+/* Aprendendo com a Luna — lições, exercícios, testes de nível e o "player" de exercícios. */
 "use strict";
 
 /* ---------- conteúdo ---------- */
@@ -236,7 +236,7 @@ function renderFooter(ex) {
   if (!Runner.showAnswers) return `<div class="feedback"><span class="ink">Resposta registrada.</span><button class="btn primary big" data-a="next">Continuar</button></div>`;
   if (last.ok) {
     const extra = (last.typo ? `<span class="ink small">Quase perfeito! Atenção à grafia: <b>${esc(ex.a)}</b></span>` : ex.t === "speak" && Runner.speakRes ? `<span class="ink small">Pronúncia compreensível: ${Math.round(Runner.speakRes.score * 100)}% das palavras reconhecidas.</span>` : ex.pt && ex.t !== "mc" ? `<span class="ink small">${esc(ex.pt)}</span>` : "") + (ex.pron ? `<span class="pron">${esc(ex.pron)}</span>` : "");
-    return `<div class="feedback right" role="status">${mascot(pick(MASCOT_ORDER), "happy", 74, "fb-mascot")}<div class="fb-head"><span class="fb-ic">${icon("check")}</span><b class="fb-title">${pick(["Muito bem!", "Isso aí!", "Mandou bem!", "Perfeito!", "Excelente!"])}</b></div>${extra}<button class="btn ok big" data-a="next">Continuar</button></div>`;
+    return `<div class="feedback right" role="status">${mascot("mia", "happy", 74, "fb-mascot")}<div class="fb-head"><span class="fb-ic">${icon("check")}</span><b class="fb-title">${pick(["Muito bem!", "Isso aí!", "Mandou bem!", "Perfeito!", "Excelente!", "A Luna adorou!", "Miau, acertou!"])}</b></div>${extra}<button class="btn ok big" data-a="next">Continuar</button></div>`;
   }
   const missed = ex.t === "speak" && Runner.speakRes && Runner.speakRes.missed ? `<span class="ink small">Palavras para treinar: ${Runner.speakRes.missed.map((w) => `<b>${esc(w)}</b>`).join(", ")}</span>` : "";
   return `<div class="feedback wrong" role="status">${mascot(pick(MASCOT_ORDER), "sad", 74, "fb-mascot")}<div class="fb-head"><span class="fb-ic">${icon("x")}</span><b class="fb-title">Resposta correta:</b></div><b class="ink fb-answer">${esc(ex.a)}</b>
@@ -263,6 +263,7 @@ function finishItem(ex, ok, given, typo = false) {
   if (ok) { Runner.combo++; Runner.bestCombo = Math.max(Runner.bestCombo, Runner.combo); } else Runner.combo = 0;
   Runner.heartFlash = false;
   if (Runner.showAnswers) sfx(ok ? "ok" : "bad");
+  if (ok && Runner.showAnswers) kittenBurst(Runner.combo);
   if (!ok && Runner.mode === "lesson" && !unlimitedHearts()) { loseHeart(); Runner.heartFlash = true; }
   const graded = Runner.mode !== "placement";
   if (graded) {
@@ -281,6 +282,35 @@ function finishItem(ex, ok, given, typo = false) {
   }
   if (Runner.hooks.onAnswer) Runner.hooks.onAnswer(res, Runner);
   save(); rerunner();
+}
+/* chuva de gatinhos a cada acerto */
+const KITTY_COATS = [
+  { fur: "#F59F00", ear: "#FFC9C9", dark: "#B35C00" }, // laranja
+  { fur: "#ADB5BD", ear: "#FFC9C9", dark: "#495057" }, // cinza
+  { fur: "#FFF4E6", ear: "#FFA8A8", dark: "#868E96" }, // branquinho
+  { fur: "#343A40", ear: "#F783AC", dark: "#000000" }, // pretinho
+  { fur: "#E8C9A0", ear: "#FFC9C9", dark: "#7F5539" }, // siamês
+];
+function kittySVG(c, happy) {
+  const eyes = happy
+    ? `<path d="M15 21q3-3 6 0M27 21q3-3 6 0" fill="none" stroke="#212529" stroke-width="2.2" stroke-linecap="round"/>`
+    : `<circle cx="18" cy="21" r="2.6" fill="#212529"/><circle cx="30" cy="21" r="2.6" fill="#212529"/><circle cx="18.8" cy="20.2" r=".9" fill="#fff"/><circle cx="30.8" cy="20.2" r=".9" fill="#fff"/>`;
+  return `<svg viewBox="0 0 48 44" aria-hidden="true"><path d="M7 20 L9 3 L20 12Z M41 20 L39 3 L28 12Z" fill="${c.fur}" stroke="${c.dark}" stroke-width="1.5" stroke-linejoin="round"/><path d="M10.5 15 L11.5 7 L17 11.5Z M37.5 15 L36.5 7 L31 11.5Z" fill="${c.ear}"/><ellipse cx="24" cy="25" rx="18" ry="15.5" fill="${c.fur}" stroke="${c.dark}" stroke-width="1.5"/>${eyes}<ellipse cx="13" cy="27" rx="3" ry="2" fill="#FF8787" opacity=".55"/><ellipse cx="35" cy="27" rx="3" ry="2" fill="#FF8787" opacity=".55"/><path d="M22 26h4l-2 2.2z" fill="#F06595"/><path d="M24 28.2q-1.5 3-4 1.6M24 28.2q1.5 3 4 1.6" fill="none" stroke="#212529" stroke-width="1.4" stroke-linecap="round"/><path d="M4 25l8 1M4 30l8-1M44 25l-8 1M44 30l-8-1" stroke="${c.dark}" stroke-width="1" stroke-linecap="round" opacity=".6"/></svg>`;
+}
+function kittenBurst(combo = 1) {
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const old = document.querySelector(".kitty-rain"); if (old) old.remove();
+  const box = document.createElement("div"); box.className = "kitty-rain"; box.setAttribute("aria-hidden", "true");
+  const n = Math.min(26, 12 + Math.max(0, combo - 1) * 3);
+  let html = "";
+  for (let i = 0; i < n; i++) {
+    const c = KITTY_COATS[Math.floor(Math.random() * KITTY_COATS.length)];
+    const size = 34 + Math.random() * 38, x = Math.random() * 96, drift = (Math.random() - .5) * 160;
+    const rot = (Math.random() - .5) * 70, delay = Math.random() * .45, dur = 1.5 + Math.random() * .9, rise = 55 + Math.random() * 40;
+    html += `<i class="kitty" style="--s:${size}px;--x:${x}%;--dx:${drift}px;--r:${rot}deg;--d:${delay}s;--t:${dur}s;--h:${rise}vh">${kittySVG(c, Math.random() < .5)}</i>`;
+  }
+  box.innerHTML = html; document.body.append(box);
+  setTimeout(() => box.remove(), 3200);
 }
 function popXP(g) { if (g <= 0) return; const p = document.createElement("div"); p.className = "xp-pop"; p.textContent = "+" + g + " XP"; document.body.append(p); setTimeout(() => p.remove(), 1000); }
 function nextItem() {

@@ -1,4 +1,4 @@
-/* Level Up English — salas de conversa ao vivo por nível (alunos praticando entre si). */
+/* Aprendendo com a Luna — salas de conversa ao vivo por nível (alunos praticando entre si). */
 "use strict";
 
 const ROOMS = [

@@ -1,28 +1,6 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Aprenda inglês alguns minutos por dia com lições curtas, mascotes, desafios com amigos e uma professora de IA.">
-<meta name="theme-color" content="#3152F5">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Level Up">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}
-.auth-wrap{min-height:90vh;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
-.auth-card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:var(--shadow);gap:14px}
-.auth-card input{font-size:16px;width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:46px;box-sizing:border-box}
-.auth-card h1{font-family:var(--display)}
-.install-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:16px;padding:10px 12px;width:min(92vw,460px)}
-.install-bar img{width:40px;height:40px;border-radius:10px}
-.install-bar p{flex:1;margin:0;font-size:.88rem;line-height:1.3}
-@media (min-width:861px){.install-bar{bottom:20px}}
-</style>
-<title>Level Up English</title>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Aprendendo com a Luna</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap">
 <style>
@@ -495,15 +473,22 @@ label.field{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size
 .room-msg{display:flex;gap:8px;align-items:flex-end;min-width:0}
 .room-msg.me{justify-content:flex-end}
 .room-msg .msg{max-width:80%}
+/* saudação da Luna */
+.luna-hi{display:flex;align-items:flex-end;gap:12px;min-width:0}
+.luna-hi .speech{flex:1;min-width:0;font-weight:600}
+.luna-hi .speech b{color:var(--brand)}
+/* chuva de gatinhos */
+.kitty-rain{position:fixed;inset:0;pointer-events:none;z-index:65;overflow:hidden}
+.kitty{position:absolute;left:var(--x);bottom:calc(-1 * var(--s) - 10px);width:var(--s);height:var(--s);opacity:0;animation:kittyup var(--t) cubic-bezier(.2,.7,.4,1) var(--d) forwards}
+.kitty svg{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.18));animation:kittywiggle .35s ease-in-out infinite alternate}
+@keyframes kittyup{0%{opacity:1;transform:translate(0,0) rotate(0) scale(.6)}25%{opacity:1;transform:translate(calc(var(--dx) * .4),calc(var(--h) * -.55)) rotate(calc(var(--r) * .5)) scale(1.1)}80%{opacity:1}100%{opacity:0;transform:translate(var(--dx),calc(var(--h) * -1)) rotate(var(--r)) scale(1)}}
+@keyframes kittywiggle{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
-</head>
-<body>
-<div id="app"><div class="loading"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="currentColor" opacity=".12"/><path d="M11 27 L18 20 L22 24 L30 14" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 14 H30 V20" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><p class="muted">Carregando o Level Up English…</p></div></div>
+
+<div id="app"><div class="loading"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="currentColor" opacity=".12"/><path d="M11 27 L18 20 L22 24 L30 14" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 14 H30 V20" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><p class="muted">Carregando o Aprendendo com a Luna…</p></div></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <div id="modal-root"></div>
-<script src="vendor/supabase.js"></script>
-<script src="platform.js"></script>
 <script src="content.js"></script>
 <script src="core.js"></script>
 <script src="lesson.js"></script>
@@ -519,29 +504,6 @@ label.field{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size
 <script src="library.js"></script>
 <script src="rooms.js"></script>
 <script src="views.js"></script>
-<script>
-/* app instalável: registra o service worker e oferece "Instalar" */
-(function () {
-  if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
-  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-  let seen = false; try { seen = !!localStorage.getItem("lue-install-dismissed"); } catch {}
-  if (standalone || seen) return;
-  let deferred = null;
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  function bar(text, action) {
-    if (document.querySelector(".install-bar")) return;
-    const b = document.createElement("div"); b.className = "install-bar";
-    b.innerHTML = '<img src="icons/icon-192.png" alt=""><p>' + text + '</p>' + (action ? '<button class="btn primary small" id="ib-go">Instalar</button>' : '') + '<button class="btn ghost small" id="ib-x" aria-label="Fechar">✕</button>';
-    document.body.append(b);
-    b.querySelector("#ib-x").onclick = () => { b.remove(); try { localStorage.setItem("lue-install-dismissed", "1"); } catch {} };
-    if (action) b.querySelector("#ib-go").onclick = action;
-  }
-  addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault(); deferred = e;
-    setTimeout(() => bar("Instale o Level Up English no seu celular para abrir com um toque.", async () => { deferred.prompt(); await deferred.userChoice.catch(() => {}); document.querySelector(".install-bar")?.remove(); }), 4000);
-  });
-  if (isIOS) setTimeout(() => bar("Para instalar: toque em Compartilhar e depois em \u201cAdicionar à Tela de Início\u201d."), 6000);
-})();
-</script>
-</body>
-</html>
+
+
+</body></html>

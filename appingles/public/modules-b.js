@@ -1,4 +1,4 @@
-/* Level Up English — módulos de conversação do dia a dia (10 a 18). */
+/* Aprendendo com a Luna — módulos de conversação do dia a dia (10 a 18). */
 window.LUE_MODULES = window.LUE_MODULES || [];
 LUE_MODULES.push(
 { n: 10, id: "m10", title: "WhatsApp e mensagens", icon: "send", s: [
